@@ -29,6 +29,10 @@ Referências internas: [arquitetura](architecture.md), [modelo de dados](databas
 
 ## 3. Arquitetura de execução
 
+**DECISÃO APROVADA — D04:** pnpm workspaces, Supabase SDK, funções transacionais PostgreSQL nas operações financeiras críticas e nenhum ORM inicialmente, com possibilidade de reavaliação futura. A decisão organiza integração e persistência; não amplia ferramentas, autonomia ou permissões da IA e preserva D01–D03.
+
+**PROPOSTA TÉCNICA — aplicação de D04:** pacotes permanecem no monorepositório pnpm; o adaptador Supabase usa o SDK sem ORM inicial. Depois de autorização explícita e validações, a aplicação invoca uma função transacional PostgreSQL para efetivar a operação financeira crítica. O modelo não escolhe RPCs arbitrárias, não fornece SQL e não recebe o cliente Supabase. Contratos de ferramentas continuam separados dos contratos de persistência; grants, RLS e verificações de workspace/área permanecem obrigatórios.
+
 **PROPOSTA TÉCNICA:** usar Responses API através de adaptador no servidor, com seleção de modelo por capacidade, custo e qualidade. Versão e modelo exatos serão avaliados antes da implementação, sem fixação especulativa neste plano.
 
 Fluxo: usuário autenticado → autorização do workspace → classificação do pedido → ferramentas permitidas → consulta/cálculo em finance-core → resultados mínimos ao modelo → resposta estruturada validada → apresentação com fontes ou proposta de ação.
@@ -114,5 +118,7 @@ Registrar modelo, versão de prompt/esquema, referências de dados, ferramenta, 
 Quotas por usuário/workspace, orçamento global, limites de contexto e circuit breaker evitam gasto descontrolado. Reservar capacidade/custo de forma atômica para requisições concorrentes e reconciliar consumo real. Retentativas têm limite e backoff; nunca repetir escrita sem idempotência. Mudança de modelo/prompt exige avaliação de regressão e liberação controlada.
 
 Se o provedor falhar ou o orçamento acabar, manter lançamentos e relatórios determinísticos disponíveis e informar indisponibilidade da IA. Não fabricar resposta financeira para disfarçar timeout. Tarefas longas seguem a estratégia de jobs da arquitetura, respeitando limites do executor escolhido.
+
+**PENDÊNCIA DE DECISÃO:** executor, infraestrutura, processamento assíncrono e hospedagem seguem em D05; backups e recuperação de dados seguem em D10. Funções transacionais de D04 não definem essas escolhas nem tornam a chamada externa ao modelo parte da transação financeira. Modelos, custos e retenção continuam pendentes em D08/D09.
 
 Fontes oficiais consultadas em 23/11/2026; validar APIs, contratos, modelos e preços antes da implementação.

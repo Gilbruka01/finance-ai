@@ -11,8 +11,9 @@ Data: 23/11/2026. Estado: planejamento; não constitui autorização para implem
 | D01 | DECISÃO APROVADA | Gestão pessoal, familiar e empresarial para PF, famílias, MEIs, autônomos e pequenas empresas; investimentos, planejamento, relatórios, projeções e IA; exclusões explícitas da primeira versão |
 | D02 | DECISÃO APROVADA | Pessoal privado; familiar compartilhado; empresarial com permissões por área; cópia independente; convites aceitos; revogação imediata; transferência de propriedade autorizada e aceita; assinatura exclusiva do owner; sem dupla aprovação geral |
 | D03 | DECISÃO APROVADA | Partidas dobradas, estorno e novo lançamento, confirmação automática válida, transferências internas, saldos armazenados atômicos, idempotência, conciliação e reconstrução pelo razão |
+| D04 | DECISÃO APROVADA | D04.1 pnpm workspaces; D04.2 Supabase SDK; D04.3 funções transacionais PostgreSQL nas operações financeiras críticas; D04.4 sem ORM inicial, com possível reavaliação futura |
 
-**PROPOSTA TÉCNICA:** decomposição de cada fase, critérios de aceite e ordem abaixo, subordinados a D01–D03 já aprovadas. **PENDÊNCIA DE DECISÃO:** detalhes técnicos, D04–D12, equipe, orçamento, datas e metas numéricas. Não há cronograma em semanas porque capacidade e contratos ainda não foram definidos. Beta interno e piloto não equivalem ao lançamento público. Esta atualização não avança nem decide D04.
+**PROPOSTA TÉCNICA:** decomposição de cada fase, critérios de aceite e ordem abaixo, subordinados a D01–D04 já aprovadas. **PENDÊNCIA DE DECISÃO:** detalhes técnicos, D05–D12, equipe, orçamento, datas e metas numéricas. Não há cronograma em semanas porque capacidade e contratos ainda não foram definidos. Beta interno e piloto não equivalem ao lançamento público. Esta atualização consolida somente a aprovação documental de D04, sem iniciar implementação ou decidir etapas posteriores.
 
 ## 2. Escopo aprovado e decomposição proposta
 
@@ -28,9 +29,9 @@ Compartilhado: cadastro e autenticação, seleção clara de workspace, contas, 
 
 | Fase | Entregas futuras propostas | Dependências | Critério de aceite |
 |---|---|---|---|
-| 0 — Decisões e viabilidade | Registrar D01–D03 aprovadas; posteriormente resolver detalhes, assinatura, fornecedores e orçamento sob autorização própria | D01–D03 aprovadas; D04–D12 pendentes | Aprovações preservadas e lacunas identificadas; antes de implementar, viabilidade e responsáveis definidos |
-| 1 — Fundação | Monorepo, ambientes, Auth, três workspaces, papéis/áreas, convites, propriedade, migrations, RLS e CI | D02 aprovada; D04/D05/D09 pendentes | Pessoal sem convidados; aceite/expiração/uso único; remoção imediata; propriedade autorizada e aceita; nenhum vazamento ou acesso por área indevido |
-| 2 — Núcleo financeiro | Razão, contas, lançamentos, confirmação automática, saldos armazenados, estornos, conciliação e reconstrução | Fase 1; D03 aprovada; D11 pendente | Débitos/créditos equilibrados, atualização atômica, precisão decimal, retries sem duplicação, pendências sem saldo, estorno/novo lançamento auditados; nenhuma transferência direta entre espaços |
+| 0 — Decisões e viabilidade | Registrar D01–D04 aprovadas; posteriormente resolver detalhes, assinatura, fornecedores e orçamento sob autorização própria | D01–D04 aprovadas; D05–D12 pendentes | Aprovações preservadas e lacunas identificadas; antes de implementar, viabilidade e responsáveis definidos |
+| 1 — Fundação | Monorepo pnpm workspaces, Supabase SDK sem ORM inicial, ambientes, Auth, três workspaces, papéis/áreas, convites, propriedade, migrations, RLS e CI | D02/D04 aprovadas; D05/D09 pendentes | Integração conforme D04; pessoal sem convidados; aceite/expiração/uso único; remoção imediata; propriedade autorizada e aceita; nenhum vazamento ou acesso por área indevido |
+| 2 — Núcleo financeiro | Razão, contas, funções transacionais PostgreSQL para operações críticas, lançamentos, confirmação automática, saldos armazenados, estornos, conciliação e reconstrução | Fase 1; D03/D04 aprovadas; D11 pendente | Funções preservam autorização e atomicidade; falha parcial não confirma efeitos; débitos/créditos equilibrados, precisão decimal, retries sem duplicação, pendências sem saldo, estorno/novo lançamento auditados; nenhuma transferência direta entre espaços |
 | 3 — Jornadas pessoal, familiar e empresarial | Planejamento, investimentos/projeções, metas, cópia independente, cartões, centros de custo, obrigações e importação | Fase 2; D01/D02 aprovadas; detalhes de cobertura e D11 pendentes | Três jornadas responsivas; cópia sem acesso à origem/sincronização; áreas protegidas; investimento sem ordens; projeções determinísticas com premissas |
 | 4 — Open Finance | Provedor, consentimento PF/PJ, webhooks, jobs, normalização e conciliação | Contrato D06; fase 2 e processamento D05 | Conexão PF/PJ, renovação/revogação, duplicação, atraso e falhas testados; custo e limites conhecidos |
 | 5 — IA integrada | Consultas com fontes, sugestões, autorização vinculada e avaliações | Fases 2/3; dados com proveniência; D08 | Qualidade medida, nenhuma mutação sem autorização nos testes, nenhuma fuga de workspace, limites de custo e fallback |
@@ -61,7 +62,7 @@ Avaliação comercial de Open Finance começa na fase 0, mesmo que integração 
 | Provedor não cobre PJ ou exige contrato inviável | Comparar cobertura, custos por conexão/chamada, suporte e exigências de produção | Fase 0/4, D06 |
 | Escopo PJ vira ERP | Preservar exclusões de D01 e validar detalhamento dentro do escopo aprovado | Fase 0/3, D01 aprovada |
 | Razão ou cartões geram saldos incorretos | Validar modelo com exemplos PF/PJ e testes de invariantes | Fase 2/3, D03/D11 |
-| Uso de service role elimina proteção esperada | Desenhar acessos comuns e operacionais separados; testes de escopo | Fase 1, D04/D05 |
+| Uso de service role elimina proteção esperada | Desenhar acessos comuns e operacionais separados; testar escopo, grants e contexto das funções | Fase 1, D04 aprovada; D05 pendente |
 | IA extrapola orçamento ou inventa respostas | Quotas, avaliações, proveniência, abstenção e circuit breaker | Fase 5, D08 |
 | Dados reais enviados a fornecedor sem governança | Mapear finalidade, contratos, minimização e retenção | Antes de qualquer piloto real, D09 |
 | Dependência de planos gratuitos | Estimar custos de produção e recuperação antes de contratar | Fase 0/6, D06/D07/D10 |
@@ -73,4 +74,4 @@ Estimar mensalidade de hospedagem, Supabase/compute/banco/Storage/egress/backups
 
 ## 7. Próximo marco de decisão
 
-D01, D02 e D03 estão formalmente aprovadas e incorporadas. Permanecem pendentes D04–D12 e detalhes de cobertura de investimentos/projeções, catálogo de áreas, cópia familiar e operação da conciliação de saldos. O próximo marco só será tratado mediante nova solicitação; esta tarefa termina com atualização documental e relatório, sem avançar para D04, contratar serviços, implementar, fazer commit ou deploy.
+D01, D02, D03 e D04 estão formalmente aprovadas e incorporadas. Permanecem pendentes D05–D12 e detalhes de cobertura de investimentos/projeções, catálogo de áreas, cópia familiar e operação da conciliação de saldos. Infraestrutura, processamento assíncrono e hospedagem (D05), além de backups, recuperação de dados, região e RPO/RTO (D10), não foram definidos pela D04. O próximo marco só será tratado mediante nova autorização; esta tarefa termina com atualização documental e relatório, sem contratar serviços, implementar, criar/executar migrations, fazer commit, push ou deploy.

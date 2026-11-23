@@ -49,6 +49,10 @@ Papéis não dão poderes bancários externos. Participação familiar ou empres
 
 ## 4. RLS e banco
 
+**DECISÃO APROVADA — D04:** pnpm workspaces, Supabase SDK, funções transacionais PostgreSQL nas operações financeiras críticas e ausência inicial de ORM, com possível reavaliação futura. A decisão não concede privilégios adicionais nem altera D01–D03.
+
+**PROPOSTA TÉCNICA — aplicação de D04:** expor somente RPCs necessárias, restringir EXECUTE e revalidar identidade, associação e permissões por área. O parâmetro workspace não prova autorização. Preservar idempotência, balanceamento, saldos e auditoria na transação. Preferir contexto do invocador quando adequado; revisar qualquer função privilegiada, sem presumir proteção por RLS em contexto que a contorne. A escolha por funções não exige privilégios elevados. Ausência de ORM não dispensa restrições e validação de entradas; SDK não autoriza escrita direta em saldos e itens.
+
 **PROPOSTA TÉCNICA:** habilitar RLS antes de expor cada tabela e negar por padrão. SELECT exige associação ativa e condições adicionais quando necessárias; INSERT usa verificação do novo registro; UPDATE verifica registro atual e novo; DELETE é negado para dados financeiros confirmados. Conversas privadas verificam também autoria. Evitar que usuários alterem o próprio papel, assinatura, proprietário ou workspace de um registro.
 
 Usar FKs compostas para proteger relações e RLS para proteger acesso. Políticas de associação devem evitar recursão; helpers precisam de revisão e testes. Views devem respeitar o contexto de autorização, com invocação do usuário quando suportada. Funções privilegiadas exigem grants mínimos, nomes de esquema explícitos, search_path restrito e validação completa do usuário/workspace.
@@ -99,6 +103,8 @@ PENDÊNCIA DE DECISÃO D09: definir controlador/operador por tratamento, contrat
 Exportação e exclusão precisam verificar identidade e escopo. Excluir conta de um membro não apaga automaticamente registros legítimos de uma empresa. Desvincular identidade, anonimizar ou reter registros depende da finalidade e obrigação aplicável. Backups têm ciclo de expiração e procedimento para reaplicar exclusões após restauração. Revogar Open Finance interrompe coleta; não substitui pedido de exclusão nem dispensa avaliar retenção.
 
 ## 8. Auditoria, continuidade e resposta
+
+**PENDÊNCIA DE DECISÃO — D05/D10:** infraestrutura, processamento assíncrono, hospedagem, contratação de backups e estratégia de recuperação continuam abertas. D04 não seleciona executor, plano de infraestrutura ou serviço de backup. Atomicidade de uma função financeira não protege, por si só, contra perda de dados ou indisponibilidade.
 
 **PROPOSTA TÉCNICA:** auditoria append-only para papéis comuns, com ator, ação, entidade, campos alterados minimizados, instante e correlação. Registrar mudanças financeiras, autorizações IA, convites, papéis, exportações, conexões e eventos administrativos. Append-only não torna o banco inviolável para administradores; avaliar cópia externa protegida e retenção conforme risco.
 

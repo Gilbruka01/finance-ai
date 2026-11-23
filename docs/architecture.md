@@ -52,7 +52,14 @@ Somente os cinco documentos existentes são atualizados nesta etapa; a estrutura
 
 Dependências propostas: finance-core depende apenas de shared; ai-engine depende de shared e contratos de finance-core; integrations implementa contratos desses módulos; web e funções compõem os adaptadores. Evitar ciclos e imports de adaptadores em regras de domínio. Compatibilidade entre runtime web e Edge Functions exige validação posterior; não pressupor suporte idêntico a bibliotecas Node.js.
 
-**PROPOSTA TÉCNICA:** pnpm workspaces; SDK Supabase e funções transacionais restritas no PostgreSQL, sem ORM adicional no início. Tipos serão gerados a partir do esquema versionado. Invariantes financeiras e de isolamento devem ser garantidas no banco além das validações de domínio.
+**DECISÃO APROVADA — D04:**
+
+- **D04.1:** pnpm workspaces para gerenciamento do monorepositório.
+- **D04.2:** Supabase SDK para integração com os serviços Supabase.
+- **D04.3:** funções transacionais PostgreSQL para operações financeiras críticas.
+- **D04.4:** não utilizar ORM inicialmente, com possibilidade de reavaliação futura.
+
+As operações financeiras críticas preservam no banco as garantias de D03, além das validações de domínio. O SDK não substitui autorização, isolamento por workspace ou RLS. **PROPOSTA TÉCNICA:** manter adaptadores em integrations, invocar funções restritas via RPC e gerar tipos do esquema versionado. Contratos, assinaturas, grants e mecanismos de concorrência ainda precisam de detalhamento. D04 não aprova tabelas, migrations ou implementação nesta etapa.
 
 ## 4. Workspaces e módulos funcionais
 
@@ -99,6 +106,8 @@ Lançamentos confirmados são preservados: correções por estorno e novo lança
 
 **PROPOSTA TÉCNICA — fluxo:** validar permissão efetiva por área, autorização IA quando aplicável, valores, moeda, duplicidade e versão esperada → persistir lançamento balanceado, atualizar saldos armazenados e gravar auditoria na mesma transação → registrar outbox quando necessário → confirmar atomicamente. Retentativas não reaplicam deltas nos saldos. Não fazer chamadas externas dentro de uma transação longa. Mecanismo de concorrência e frequência da conciliação permanecem detalhes a validar.
 
+**Consequência de D04.3 para os fluxos financeiros:** a unidade crítica de persistência é executada em função transacional PostgreSQL. **PROPOSTA TÉCNICA:** o backend invoca a função pelo Supabase SDK, com identidade e escopo validados; escritas separadas pelo SDK não devem fragmentar a atomicidade de D03. Funções PostgreSQL não são Edge Functions nem definem o executor assíncrono.
+
 ### Open Finance
 
 Criar sessão de conexão no provedor → redirecionar para jornada oficial de consentimento/autenticação → receber retorno verificado → armazenar identificadores e referência segura ao segredo → sincronizar por jobs → normalizar dados → detectar duplicatas → conciliar → publicar registros válidos.
@@ -110,6 +119,8 @@ Cada conexão e consentimento pertence a um workspace, mesmo quando a pessoa adm
 **DECISÃO APROVADA — D02:** somente owner administra a assinatura do workspace. **PROPOSTA TÉCNICA:** cobrança por workspace, separada dos lançamentos financeiros do usuário. Eventos de cobrança são verificados e idempotentes; o estado local é reconciliado com o provedor. O cliente não pode elevar seu próprio plano. Inadimplência limita funcionalidades conforme política comercial, sem apagar registros. Ofertas pessoais, familiares e empresariais, bundles, preços e limites permanecem pendentes em D07.
 
 ## 6. Assíncrono, falhas e escalabilidade
+
+**PENDÊNCIA DE DECISÃO — D05/D10:** D04 não define infraestrutura de execução, filas, processamento assíncrono, hospedagem, backups ou recuperação de dados. Essas escolhas continuam pendentes, incluindo região, RPO/RTO e recuperação de banco e arquivos.
 
 **PROPOSTA TÉCNICA:** fila persistente no PostgreSQL, outbox transacional e consumidores em lotes pequenos. Entrega é pelo menos uma vez; garantir efeito idempotente, sem prometer execução exatamente uma vez. Jobs têm workspace, tipo, referência de payload, tentativas, prazo de lease, próxima execução, estado e chave de deduplicação. Falhas permanentes vão para revisão, com reprocessamento controlado.
 
@@ -127,19 +138,19 @@ Observar erros, latência, atraso de sincronização, idade dos dados, custo de 
 
 ## 8. Registro de decisões
 
-Os identificadores abaixo são usados nos demais documentos. D01–D03 são **DECISÃO APROVADA**; seus requisitos não transformam estruturas de banco ou detalhes de implementação em decisões aprovadas.
+Os identificadores abaixo são usados nos demais documentos. D01–D04 são **DECISÃO APROVADA**; seus requisitos não transformam estruturas de banco ou detalhes de implementação ainda não definidos em decisões aprovadas.
 
 | ID | Status | Conteúdo aprovado |
 |---|---|---|
 | D01 | DECISÃO APROVADA | Gestão pessoal, familiar e empresarial para PF, famílias, MEIs, autônomos e pequenas empresas; investimentos, planejamento, relatórios, projeções e IA; exclusões da primeira versão descritas na seção 4 |
 | D02 | DECISÃO APROVADA | Três tipos de workspace; papéis e granularidade empresarial; cópia pessoal/familiar independente; convites, revogação imediata, propriedade aceita e assinatura exclusiva do owner; sem dupla aprovação geral |
 | D03 | DECISÃO APROVADA | Partidas dobradas, estorno e novo lançamento, confirmação automática válida, transferências internas, saldos armazenados atômicos e conciliáveis, precisão decimal e autorização IA |
+| D04 | DECISÃO APROVADA | D04.1 pnpm workspaces; D04.2 Supabase SDK; D04.3 funções transacionais PostgreSQL para operações financeiras críticas; D04.4 sem ORM inicialmente, com possível reavaliação futura |
 
-**PENDÊNCIA DE DECISÃO:** D04–D12 permanecem abertas. As sugestões anteriores abaixo são preservadas como **PROPOSTA TÉCNICA**, sem decisão, ampliação de escopo ou início de trabalho em D04.
+**PENDÊNCIA DE DECISÃO:** D05–D12 permanecem abertas. As sugestões abaixo são preservadas como **PROPOSTA TÉCNICA**, sem aprovação implícita pela D04 nem autorização para implementação.
 
 | ID | Decisão | Proposta ou critério |
 |---|---|---|
-| D04 | Ferramentas de persistência e monorepo | pnpm, SDK Supabase e funções transacionais; sem ORM inicial |
 | D05 | Executor e hospedagem | Web hospedada e fila PostgreSQL; validar Edge Functions versus worker |
 | D06 | Provedor Open Finance | Cobertura PF/PJ, contrato, consentimento, qualidade, segurança, SLA e custo |
 | D07 | Cobrança e planos | Assinatura por workspace; escolher provedor, quotas e política de inadimplência |
@@ -159,7 +170,7 @@ Os identificadores abaixo são usados nos demais documentos. D01–D03 são **DE
 | Saldos incorretos | Razão balanceado, precisão decimal, transações, reconciliação e estornos | D03/D11 |
 | Open Finance indisponível ou caro | Adaptador substituível, contrato medido, limites e importação alternativa | D06 |
 | IA incorreta ou onerosa | Ferramentas restritas, avaliações, quotas e confirmação vinculada à proposta | D08 |
-| Dependência de fornecedor | Domínio desacoplado, exportação e restauração testadas | D04/D05/D10 |
+| Dependência de fornecedor | Domínio desacoplado, exportação e restauração testadas | D04 aprovada; D05/D10 pendentes |
 | Jobs duplicados ou interrompidos | Idempotência, lease, retentativas e fila de falhas | D05 |
 | Escopo empresarial excessivo | Critérios explícitos de lançamento e fases com aceite | D01/D12 |
 

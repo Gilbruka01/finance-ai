@@ -6,7 +6,9 @@ Data: 23/11/2026. Estado: modelo lógico proposto; não contém migrations execu
 
 **DECISÃO APROVADA:** PostgreSQL no Supabase, RLS, migrations versionadas e auditoria; D01 inclui gestão pessoal, familiar e empresarial, investimentos e projeções; D02 define os três espaços, colaboração e permissões; D03 define partidas dobradas, correções por estorno e novo lançamento, confirmação automática após validações, saldos armazenados e integridade.
 
-**PROPOSTA TÉCNICA:** todas as tabelas, campos, tipos, cardinalidades, índices e mecanismos físicos abaixo continuam propostas até a fase de implementação. As regras de produto aprovadas orientam o modelo, mas não aprovam seu desenho físico. **PENDÊNCIA DE DECISÃO:** D04, D07, D11 e demais detalhes do [registro de arquitetura](architecture.md#8-registro-de-decisões).
+**DECISÃO APROVADA — D04:** pnpm workspaces (D04.1), Supabase SDK (D04.2), funções transacionais PostgreSQL nas operações financeiras críticas (D04.3) e ausência inicial de ORM, passível de reavaliação futura (D04.4).
+
+**PROPOSTA TÉCNICA:** tabelas, campos, tipos, cardinalidades, índices e detalhes físicos abaixo continuam propostas até a fase de implementação. A escolha de funções transacionais está aprovada, mas seus contratos, assinaturas e mecanismos de concorrência não estão definidos. As decisões orientam o modelo sem aprovar seu desenho físico completo. **PENDÊNCIA DE DECISÃO:** D05–D12 e demais detalhes do [registro de arquitetura](architecture.md#8-registro-de-decisões).
 
 Convenções propostas:
 
@@ -73,6 +75,8 @@ Convenções propostas:
 | goal_allocations | workspace_id, goal_id, financial_account_id, amount | Reserva virtual; não é movimentação; soma por conta limitada ao disponível sob política aprovada |
 
 ### Invariantes de postagem
+
+**DECISÃO APROVADA — D04.3:** operações financeiras críticas usam funções transacionais PostgreSQL. **PROPOSTA TÉCNICA:** postagem, correção por estorno/novo lançamento e atualização de saldos passam por funções restritas chamadas via Supabase SDK/RPC, preservando uma unidade transacional por operação. Não coordenar gravações independentes do SDK como substituto dessa transação. Validar identidade, workspace, permissões, idempotência, balanceamento e auditoria no caminho de execução; RLS e restrições continuam aplicáveis conforme o papel efetivo. Nomes e desenho das funções permanecem propostas; nenhum SQL executável é criado aqui.
 
 **DECISÃO APROVADA:** lançamentos válidos são confirmados automaticamente após as validações. Inválidos, incompletos ou suspeitos de duplicidade são rejeitados ou mantidos pendentes e não alteram saldos confirmados. Autorização explícita para alterações da IA continua obrigatória; validação de dados não substitui autorização.
 
@@ -169,6 +173,8 @@ erDiagram
 O diagrama resume relações, não substitui as tabelas. Usuários são identidades globais; dados financeiros sempre pertencem a um workspace. Uma conexão não concede acesso ao workspace, e uma assinatura não concede associação a ele.
 
 ## 8. Índices, RLS e evolução
+
+Com D04 aprovada, a integração usa Supabase SDK sem ORM inicial; funções transacionais e respectivos grants devem acompanhar as migrations versionadas futuras. **PROPOSTA TÉCNICA:** gerar tipos do esquema e validar contratos de RPC para evitar divergência entre aplicação e banco. **PENDÊNCIA DE DECISÃO:** executor, fila e hospedagem seguem em D05; backups, recuperação de banco/Storage, região, RPO e RTO seguem em D10. Reconstruir saldos pelo razão não substitui recuperar dados perdidos em incidente.
 
 Índices propostos: associação ativa por usuário/workspace; lançamentos por workspace/data/status; itens por workspace/conta/lançamento; obrigações por workspace/vencimento; eventos por provedor/ID; jobs por estado/disponibilidade; auditoria por workspace/data; propostas por workspace/usuário/estado. Indexar FKs e colunas usadas nas políticas após medir os planos de consulta.
 
