@@ -29,6 +29,10 @@ Referências internas: [arquitetura](architecture.md), [modelo de dados](databas
 
 ## 3. Arquitetura de execução
 
+**DECISÃO APROVADA — D05.1:** aplicação Next.js inicialmente na Render; desenvolvimento local permitido sem contratar hospedagem; produção em instância paga dimensionada por testes de desempenho, segurança e capacidade, sem plano específico aprovado. O banco continua no Supabase PostgreSQL, com isolamento, autenticação, autorização e proteção financeira preservados. A arquitetura mantém possibilidade de evolução/migração de hospedagem.
+
+**PROPOSTA TÉCNICA — consequência para IA:** chamadas ao provedor partem do backend autorizado, com segredos protegidos no servidor e contratos desacoplados da Render. Persistir propostas, autorizações e resultados conforme o modelo Supabase, sem depender da memória do processo web. Testar timeouts, concorrência, limites de custo e retomadas idempotentes antes de produção. A escolha da hospedagem web não determina onde tarefas longas serão executadas nem autoriza workers ou agendamentos.
+
 **DECISÃO APROVADA — D04:** pnpm workspaces, Supabase SDK, funções transacionais PostgreSQL nas operações financeiras críticas e nenhum ORM inicialmente, com possibilidade de reavaliação futura. A decisão organiza integração e persistência; não amplia ferramentas, autonomia ou permissões da IA e preserva D01–D03.
 
 **PROPOSTA TÉCNICA — aplicação de D04:** pacotes permanecem no monorepositório pnpm; o adaptador Supabase usa o SDK sem ORM inicial. Depois de autorização explícita e validações, a aplicação invoca uma função transacional PostgreSQL para efetivar a operação financeira crítica. O modelo não escolhe RPCs arbitrárias, não fornece SQL e não recebe o cliente Supabase. Contratos de ferramentas continuam separados dos contratos de persistência; grants, RLS e verificações de workspace/área permanecem obrigatórios.
@@ -119,6 +123,6 @@ Quotas por usuário/workspace, orçamento global, limites de contexto e circuit 
 
 Se o provedor falhar ou o orçamento acabar, manter lançamentos e relatórios determinísticos disponíveis e informar indisponibilidade da IA. Não fabricar resposta financeira para disfarçar timeout. Tarefas longas seguem a estratégia de jobs da arquitetura, respeitando limites do executor escolhido.
 
-**PENDÊNCIA DE DECISÃO:** executor, infraestrutura, processamento assíncrono e hospedagem seguem em D05; backups e recuperação de dados seguem em D10. Funções transacionais de D04 não definem essas escolhas nem tornam a chamada externa ao modelo parte da transação financeira. Modelos, custos e retenção continuam pendentes em D08/D09.
+**PENDÊNCIA DE DECISÃO:** processamento assíncrono, filas, agendamentos e workers seguem em D05.2. D05.1 aprova Render somente para a hospedagem inicial da aplicação Next.js; plano comercial e demais parâmetros operacionais não decididos continuam abertos. Backups e recuperação de dados seguem em D10. Funções transacionais de D04 não definem essas escolhas nem tornam a chamada externa ao modelo parte da transação financeira. Modelos, custos e retenção continuam pendentes em D08/D09.
 
 Fontes oficiais consultadas em 23/11/2026; validar APIs, contratos, modelos e preços antes da implementação.

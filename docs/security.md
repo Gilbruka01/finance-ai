@@ -8,7 +8,7 @@ Data: 23/11/2026. Estado: planejamento de controles, sem configuração de servi
 
 **DECISÃO APROVADA — D01–D03:** gestão pessoal, familiar e empresarial, incluindo investimentos/projeções sem executar ordens ou pagamentos; três tipos de workspace; permissões individuais e por área empresarial; cópia independente pessoal/familiar; revogação imediata; partidas dobradas, estorno e novo lançamento, confirmação automática válida e saldos armazenados com integridade.
 
-**PROPOSTA TÉCNICA:** mecanismos de proteção deste documento materializam os requisitos aprovados, mas ainda não foram implementados ou aprovados em detalhe. **PENDÊNCIA DE DECISÃO:** D05, D06, D08, D09 e D10 do [registro de decisões](architecture.md#8-registro-de-decisões). Documentação não equivale a controles implementados nem certificação de conformidade jurídica.
+**PROPOSTA TÉCNICA:** mecanismos de proteção deste documento materializam os requisitos aprovados, mas ainda não foram implementados ou aprovados em detalhe. **PENDÊNCIA DE DECISÃO:** D05.2, demais detalhes não decididos da D05, D06, D08, D09 e D10 do [registro de decisões](architecture.md#8-registro-de-decisões). D05.1 está aprovada; documentação não equivale a controles implementados nem certificação de conformidade jurídica.
 
 Fronteiras: navegador não confiável; backend autenticado e autorizado; banco com RLS e grants; processadores operacionais privilegiados; provedores externos; modelo de IA e documentos tratados como fontes não confiáveis para instruções. Cada passagem precisa de validação independente.
 
@@ -67,6 +67,10 @@ Permissões por área devem alcançar consultas, agregados, exportações, RPCs,
 
 ## 5. Arquivos, segredos e aplicação web
 
+**DECISÃO APROVADA — D05.1:** Render hospeda inicialmente a aplicação Next.js, com instância paga em produção dimensionada por testes de desempenho, segurança e capacidade; desenvolvimento pode ser local sem contratação de hospedagem. PostgreSQL permanece no Supabase, nenhum plano comercial específico está aprovado e a arquitetura deve permitir evolução/migração. A hospedagem preserva isolamento por workspace, autenticação, autorização e proteção dos dados financeiros.
+
+**PROPOSTA TÉCNICA — controles de implantação:** validar comunicação cifrada entre navegador, aplicação e Supabase; proteger credenciais de implantação e segredos por ambiente; restringir acesso administrativo e evitar dados financeiros em logs de build/execução. Verificar sessão, callbacks de autenticação, autorização por área, RLS, cache e acesso a arquivos no ambiente hospedado. Reinícios e novas instâncias não podem misturar espaços ou depender de sessão/autorização mantida apenas em memória. Manter configuração de hospedagem separada do domínio para facilitar migração. Esses controles são requisitos de validação futura, não configurações realizadas nesta tarefa.
+
 **PROPOSTA TÉCNICA:** buckets privados, metadados com workspace e políticas de Storage coerentes com associação e área. Nome/prefixo do objeto não é autorização. Para cumprir revogação imediata, acesso a arquivos compartilhados deve passar por autorização atual em cada requisição; URL assinada entregue diretamente ao cliente, válida até expirar, não satisfaz sozinha esse requisito. Usar acesso mediado/revalidado e invalidar streams/sessões controladas. Dados já baixados não podem ser recolhidos retroativamente; a revogação impede novos acessos pela plataforma.
 
 Uploads: limitar tamanho e tipos, conferir conteúdo real, usar quarentena e varredura conforme o formato, bloquear execução de conteúdo, evitar servir HTML ativo no domínio da aplicação. Downloads e exclusões também exigem autorização. Exportações devem ter prazo de expiração e auditoria.
@@ -104,7 +108,7 @@ Exportação e exclusão precisam verificar identidade e escopo. Excluir conta d
 
 ## 8. Auditoria, continuidade e resposta
 
-**PENDÊNCIA DE DECISÃO — D05/D10:** infraestrutura, processamento assíncrono, hospedagem, contratação de backups e estratégia de recuperação continuam abertas. D04 não seleciona executor, plano de infraestrutura ou serviço de backup. Atomicidade de uma função financeira não protege, por si só, contra perda de dados ou indisponibilidade.
+**PENDÊNCIA DE DECISÃO — D05.2/D10:** processamento assíncrono, filas, agendamentos e workers permanecem pendentes em D05.2. A plataforma web Render está aprovada em D05.1, mas plano comercial, dimensionamento final e outros parâmetros operacionais não estão definidos. Backups, estratégia de recuperação, região e RPO/RTO continuam em D10. D05.1 não garante disponibilidade ou recuperação por si só; atomicidade de função financeira também não protege contra perda de dados ou indisponibilidade.
 
 **PROPOSTA TÉCNICA:** auditoria append-only para papéis comuns, com ator, ação, entidade, campos alterados minimizados, instante e correlação. Registrar mudanças financeiras, autorizações IA, convites, papéis, exportações, conexões e eventos administrativos. Append-only não torna o banco inviolável para administradores; avaliar cópia externa protegida e retenção conforme risco.
 

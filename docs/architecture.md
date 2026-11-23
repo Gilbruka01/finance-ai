@@ -120,11 +120,15 @@ Cada conexão e consentimento pertence a um workspace, mesmo quando a pessoa adm
 
 ## 6. Assíncrono, falhas e escalabilidade
 
-**PENDÊNCIA DE DECISÃO — D05/D10:** D04 não define infraestrutura de execução, filas, processamento assíncrono, hospedagem, backups ou recuperação de dados. Essas escolhas continuam pendentes, incluindo região, RPO/RTO e recuperação de banco e arquivos.
+**DECISÃO APROVADA — D05.1: hospedagem:** Render será a plataforma inicial da aplicação Next.js. O desenvolvimento pode ocorrer localmente, sem contratação obrigatória de hospedagem. Produção usará uma instância paga da Render, dimensionada conforme testes de desempenho, segurança e capacidade; nenhum plano comercial específico está aprovado. O banco continua no Supabase PostgreSQL. A hospedagem deve preservar isolamento por workspace, autenticação, autorização e proteção dos dados financeiros. A arquitetura deve permitir evolução e eventual migração de hospedagem, evitando dependências desnecessárias.
+
+**PROPOSTA TÉCNICA — aplicação de D05.1:** manter a aplicação Next.js e seus adaptadores portáveis, com configuração de ambiente separada do domínio e sem persistir registros financeiros no disco local da aplicação. O backend hospedado na Render integra os serviços Supabase pelo SDK e invoca as funções PostgreSQL de D04; a mudança de hospedagem não desloca o razão ou as transações para a Render. Validar conectividade, latência, limites de conexão, comportamento em reinício e isolamento de cache/sessão antes de produção. Formato de implantação e parâmetros operacionais permanecem a detalhar.
+
+**PENDÊNCIA DE DECISÃO:** D05 está parcialmente decidida. D05.2 mantém processamento assíncrono, filas, agendamentos e workers em aberto; D05.1 não os seleciona implicitamente na Render ou no Supabase. Plano comercial, dimensionamento final e demais parâmetros operacionais não decididos da D05 continuam pendentes. Região, backups, RPO/RTO e recuperação de banco e arquivos permanecem em D10.
 
 **PROPOSTA TÉCNICA:** fila persistente no PostgreSQL, outbox transacional e consumidores em lotes pequenos. Entrega é pelo menos uma vez; garantir efeito idempotente, sem prometer execução exatamente uma vez. Jobs têm workspace, tipo, referência de payload, tentativas, prazo de lease, próxima execução, estado e chave de deduplicação. Falhas permanentes vão para revisão, com reprocessamento controlado.
 
-Edge Functions são candidatas para lotes curtos, webhooks e agendamento. Seus [limites oficiais](https://supabase.com/docs/guides/functions/limits) precisam ser confrontados com carga, tempo e memória antes de selecionar o executor. Tarefas longas podem exigir worker dedicado; hospedagem e eventual nova pasta serão decisões posteriores, sem alterar a estrutura aprovada nesta etapa.
+Edge Functions continuam candidatas para lotes curtos, webhooks e agendamento, como proposta de D05.2. Seus [limites oficiais](https://supabase.com/docs/guides/functions/limits) precisam ser confrontados com carga, tempo e memória antes de selecionar o executor. Tarefas longas podem exigir worker dedicado; sua plataforma de execução e eventual nova pasta serão decisões posteriores, sem alterar a estrutura aprovada nesta etapa. A hospedagem da aplicação web na Render não define a dos workers.
 
 Manter aplicação web sem estado local persistente; usar pool de conexões; paginar resultados; indexar por workspace e período; limitar concorrência por cliente e provedor. Cache financeiro precisa incorporar workspace e autorização, com invalidação após alterações. Agregados podem ser reconstruídos; não substituir a fonte de verdade por cache ou saída de IA.
 
@@ -138,7 +142,7 @@ Observar erros, latência, atraso de sincronização, idade dos dados, custo de 
 
 ## 8. Registro de decisões
 
-Os identificadores abaixo são usados nos demais documentos. D01–D04 são **DECISÃO APROVADA**; seus requisitos não transformam estruturas de banco ou detalhes de implementação ainda não definidos em decisões aprovadas.
+Os identificadores abaixo são usados nos demais documentos. D01–D04 e D05.1 são **DECISÃO APROVADA**; D05 é parcialmente decidida. Seus requisitos não transformam estruturas de banco ou detalhes de implementação ainda não definidos em decisões aprovadas.
 
 | ID | Status | Conteúdo aprovado |
 |---|---|---|
@@ -147,11 +151,14 @@ Os identificadores abaixo são usados nos demais documentos. D01–D04 são **DE
 | D03 | DECISÃO APROVADA | Partidas dobradas, estorno e novo lançamento, confirmação automática válida, transferências internas, saldos armazenados atômicos e conciliáveis, precisão decimal e autorização IA |
 | D04 | DECISÃO APROVADA | D04.1 pnpm workspaces; D04.2 Supabase SDK; D04.3 funções transacionais PostgreSQL para operações financeiras críticas; D04.4 sem ORM inicialmente, com possível reavaliação futura |
 
-**PENDÊNCIA DE DECISÃO:** D05–D12 permanecem abertas. As sugestões abaixo são preservadas como **PROPOSTA TÉCNICA**, sem aprovação implícita pela D04 nem autorização para implementação.
+**DECISÃO APROVADA — D05.1:** Render para Next.js; desenvolvimento local permitido sem contratação de hospedagem; produção em instância paga dimensionada por testes; PostgreSQL no Supabase; segurança e possibilidade de migração preservadas; nenhum plano comercial específico aprovado.
+
+**PENDÊNCIA DE DECISÃO:** D05.2, demais detalhes não decididos da D05 e D06–D12 permanecem abertos. As sugestões abaixo são preservadas como **PROPOSTA TÉCNICA**, sem aprovação implícita pela D05.1 nem autorização para implementação ou contratação.
 
 | ID | Decisão | Proposta ou critério |
 |---|---|---|
-| D05 | Executor e hospedagem | Web hospedada e fila PostgreSQL; validar Edge Functions versus worker |
+| D05.2 | Processamento assíncrono | Filas, agendamentos e workers pendentes; fila PostgreSQL e Edge Functions continuam propostas |
+| D05 — detalhes restantes | Parâmetros operacionais da hospedagem | Plano comercial, dimensionamento por testes e formato de implantação a definir; plataforma web Render já aprovada em D05.1 |
 | D06 | Provedor Open Finance | Cobertura PF/PJ, contrato, consentimento, qualidade, segurança, SLA e custo |
 | D07 | Cobrança e planos | Assinatura por workspace; escolher provedor, quotas e política de inadimplência |
 | D08 | IA | Modelos, orçamento, contexto, retenção, limiares de qualidade e autorizações |
@@ -170,8 +177,8 @@ Os identificadores abaixo são usados nos demais documentos. D01–D04 são **DE
 | Saldos incorretos | Razão balanceado, precisão decimal, transações, reconciliação e estornos | D03/D11 |
 | Open Finance indisponível ou caro | Adaptador substituível, contrato medido, limites e importação alternativa | D06 |
 | IA incorreta ou onerosa | Ferramentas restritas, avaliações, quotas e confirmação vinculada à proposta | D08 |
-| Dependência de fornecedor | Domínio desacoplado, exportação e restauração testadas | D04 aprovada; D05/D10 pendentes |
-| Jobs duplicados ou interrompidos | Idempotência, lease, retentativas e fila de falhas | D05 |
+| Dependência de fornecedor | Domínio desacoplado, portabilidade da hospedagem, exportação e restauração testadas | D04/D05.1 aprovadas; D05.2, detalhes restantes da D05 e D10 pendentes |
+| Jobs duplicados ou interrompidos | Idempotência, lease, retentativas e fila de falhas | D05.2 pendente |
 | Escopo empresarial excessivo | Critérios explícitos de lançamento e fases com aceite | D01/D12 |
 
 Fontes técnicas consultadas em 23/11/2026. Custos, versões, limites e contratos devem ser revalidados no momento da implementação.

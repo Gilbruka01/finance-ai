@@ -8,7 +8,9 @@ Data: 23/11/2026. Estado: modelo lógico proposto; não contém migrations execu
 
 **DECISÃO APROVADA — D04:** pnpm workspaces (D04.1), Supabase SDK (D04.2), funções transacionais PostgreSQL nas operações financeiras críticas (D04.3) e ausência inicial de ORM, passível de reavaliação futura (D04.4).
 
-**PROPOSTA TÉCNICA:** tabelas, campos, tipos, cardinalidades, índices e detalhes físicos abaixo continuam propostas até a fase de implementação. A escolha de funções transacionais está aprovada, mas seus contratos, assinaturas e mecanismos de concorrência não estão definidos. As decisões orientam o modelo sem aprovar seu desenho físico completo. **PENDÊNCIA DE DECISÃO:** D05–D12 e demais detalhes do [registro de arquitetura](architecture.md#8-registro-de-decisões).
+**DECISÃO APROVADA — D05.1:** a aplicação Next.js será hospedada inicialmente na Render; o banco permanece no Supabase PostgreSQL. Desenvolvimento local não exige contratação de hospedagem; produção usa instância paga Render dimensionada por testes de desempenho, segurança e capacidade, sem plano comercial específico aprovado. Isolamento, autenticação, autorização, proteção dos dados e possibilidade de evolução/migração da hospedagem são preservados.
+
+**PROPOSTA TÉCNICA:** tabelas, campos, tipos, cardinalidades, índices e detalhes físicos abaixo continuam propostas até a fase de implementação. A escolha de funções transacionais está aprovada, mas seus contratos, assinaturas e mecanismos de concorrência não estão definidos. As decisões orientam o modelo sem aprovar seu desenho físico completo. **PENDÊNCIA DE DECISÃO:** D05.2, demais detalhes não decididos da D05, D06–D12 e demais pontos do [registro de arquitetura](architecture.md#8-registro-de-decisões).
 
 Convenções propostas:
 
@@ -174,7 +176,9 @@ O diagrama resume relações, não substitui as tabelas. Usuários são identida
 
 ## 8. Índices, RLS e evolução
 
-Com D04 aprovada, a integração usa Supabase SDK sem ORM inicial; funções transacionais e respectivos grants devem acompanhar as migrations versionadas futuras. **PROPOSTA TÉCNICA:** gerar tipos do esquema e validar contratos de RPC para evitar divergência entre aplicação e banco. **PENDÊNCIA DE DECISÃO:** executor, fila e hospedagem seguem em D05; backups, recuperação de banco/Storage, região, RPO e RTO seguem em D10. Reconstruir saldos pelo razão não substitui recuperar dados perdidos em incidente.
+Com D04 aprovada, a integração usa Supabase SDK sem ORM inicial; funções transacionais e respectivos grants devem acompanhar as migrations versionadas futuras. **PROPOSTA TÉCNICA:** gerar tipos do esquema e validar contratos de RPC para evitar divergência entre aplicação e banco. Na hospedagem Render aprovada em D05.1, conservar o estado financeiro no Supabase, sem depender de memória ou disco da aplicação como fonte de verdade. Testar conexões e falhas de rede entre aplicação e banco; retry deve preservar idempotência e atomicidade, inclusive quando a resposta se perde após confirmação. A troca futura de hospedagem não deve exigir reescrever o modelo financeiro.
+
+**PENDÊNCIA DE DECISÃO:** processamento assíncrono, filas, agendamentos e workers seguem em D05.2; plano e parâmetros operacionais não decididos da Render continuam abertos. Backups, recuperação de banco/Storage, região, RPO e RTO seguem em D10. Hospedar a aplicação na Render não define backup do Supabase. Reconstruir saldos pelo razão não substitui recuperar dados perdidos em incidente.
 
 Índices propostos: associação ativa por usuário/workspace; lançamentos por workspace/data/status; itens por workspace/conta/lançamento; obrigações por workspace/vencimento; eventos por provedor/ID; jobs por estado/disponibilidade; auditoria por workspace/data; propostas por workspace/usuário/estado. Indexar FKs e colunas usadas nas políticas após medir os planos de consulta.
 
