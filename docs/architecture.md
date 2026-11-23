@@ -37,7 +37,7 @@ docs
 
 Somente os cinco documentos existentes são atualizados nesta etapa; a estrutura acima não é uma declaração de pastas ou código já existentes.
 
-**PROPOSTA TÉCNICA — monólito modular:** uma aplicação web e módulos com contratos explícitos. O processamento assíncrono pode executar separadamente, mas reutiliza regras e contratos do mesmo repositório. Separar serviços adicionais quando houver evidência de necessidade operacional.
+**PROPOSTA TÉCNICA — monólito modular:** uma aplicação web e módulos com contratos explícitos. Conforme D05.2, o processamento assíncrono executa em Render Background Worker separado do Next.js; a proposta modular reutiliza regras e contratos do mesmo repositório. Separar serviços adicionais quando houver evidência de necessidade operacional.
 
 | Componente | Responsabilidade proposta | Limite |
 |---|---|---|
@@ -47,7 +47,7 @@ Somente os cinco documentos existentes são atualizados nesta etapa; a estrutura
 | integrations | Adaptadores Supabase, Open Finance, OpenAI, cobrança e armazenamento | Isola SDKs e contratos externos; não duplica regras financeiras |
 | shared | Tipos de contratos, validações de fronteira e erros comuns | Sem segredos, acesso a rede ou importação dos demais pacotes |
 | supabase/migrations | Evolução futura de tabelas, restrições, funções e RLS | Fonte versionada do esquema, sem alterações manuais não rastreadas |
-| supabase/functions | Entradas curtas para eventos, agendamento e consumidores de lotes | Validar identidade/origem; tarefas devem respeitar limites de execução |
+| supabase/functions | Possíveis entradas curtas para eventos, sujeitas a detalhamento | Não substitui o worker Render e o Supabase Cron aprovados em D05.2; validar identidade/origem |
 | docs | Decisões, modelo, segurança, roadmap e IA | Manter mudanças correlatas consistentes |
 
 Dependências propostas: finance-core depende apenas de shared; ai-engine depende de shared e contratos de finance-core; integrations implementa contratos desses módulos; web e funções compõem os adaptadores. Evitar ciclos e imports de adaptadores em regras de domínio. Compatibilidade entre runtime web e Edge Functions exige validação posterior; não pressupor suporte idêntico a bibliotecas Node.js.
@@ -124,11 +124,17 @@ Cada conexão e consentimento pertence a um workspace, mesmo quando a pessoa adm
 
 **PROPOSTA TÉCNICA — aplicação de D05.1:** manter a aplicação Next.js e seus adaptadores portáveis, com configuração de ambiente separada do domínio e sem persistir registros financeiros no disco local da aplicação. O backend hospedado na Render integra os serviços Supabase pelo SDK e invoca as funções PostgreSQL de D04; a mudança de hospedagem não desloca o razão ou as transações para a Render. Validar conectividade, latência, limites de conexão, comportamento em reinício e isolamento de cache/sessão antes de produção. Formato de implantação e parâmetros operacionais permanecem a detalhar.
 
-**PENDÊNCIA DE DECISÃO:** D05 está parcialmente decidida. D05.2 mantém processamento assíncrono, filas, agendamentos e workers em aberto; D05.1 não os seleciona implicitamente na Render ou no Supabase. Plano comercial, dimensionamento final e demais parâmetros operacionais não decididos da D05 continuam pendentes. Região, backups, RPO/RTO e recuperação de banco e arquivos permanecem em D10.
+**DECISÃO APROVADA — D05.2: arquitetura principal de processamento assíncrono:** Supabase Queues (pgmq) para persistência e entrega das tarefas; Render Background Worker para execução em segundo plano, separado da aplicação Next.js; Supabase Cron para disparo de tarefas periódicas. A aprovação é documental e não autoriza provisionamento, contratação ou implementação.
 
-**PROPOSTA TÉCNICA:** fila persistente no PostgreSQL, outbox transacional e consumidores em lotes pequenos. Entrega é pelo menos uma vez; garantir efeito idempotente, sem prometer execução exatamente uma vez. Jobs têm workspace, tipo, referência de payload, tentativas, prazo de lease, próxima execução, estado e chave de deduplicação. Falhas permanentes vão para revisão, com reprocessamento controlado.
+**Princípios aprovados de D05.2:** entrega pelo menos uma vez, com possível reentrega após falhas, interrupções ou expiração de reservas; idempotência persistente e transacional para não duplicar lançamentos, saldos, importações ou outros efeitos. Não presumir execução exatamente uma vez. Antes de executar tarefa delegada por usuário, revalidar permissões atuais e escopo do workspace; enfileiramento não preserva autorização revogada nem constitui autorização explícita para ações financeiras da IA.
 
-Edge Functions continuam candidatas para lotes curtos, webhooks e agendamento, como proposta de D05.2. Seus [limites oficiais](https://supabase.com/docs/guides/functions/limits) precisam ser confrontados com carga, tempo e memória antes de selecionar o executor. Tarefas longas podem exigir worker dedicado; sua plataforma de execução e eventual nova pasta serão decisões posteriores, sem alterar a estrutura aprovada nesta etapa. A hospedagem da aplicação web na Render não define a dos workers.
+Cada tarefa deve possuir escopo verificável e mensagens com identificadores e dados mínimos, sem exposição desnecessária de dados financeiros, pessoais ou credenciais. Proteger credenciais privilegiadas do worker, aplicar privilégios mínimos e validar explicitamente autorização nas operações críticas. Rastrear criação, processamento, tentativas, falhas, conclusão e reprocessamento, distinguindo auditoria operacional de financeira. Recuperar tarefas interrompidas e identificar falhas que exigem intervenção; distinguir conceitualmente falhas transitórias, permanentes e resultados externos incertos.
+
+O worker não contorna D03/D04: ledger de partidas dobradas, saldos armazenados e auditoria financeira continuam atualizados atomicamente por funções transacionais PostgreSQL. Confirmar processamento respeitando a persistência dos efeitos e a idempotência, inclusive se a resposta se perder após commit.
+
+**PROPOSTA TÉCNICA — detalhamento:** consumidores em lotes pequenos; registro operacional de jobs com workspace, tipo, referência de payload, tentativas, reserva, próxima execução, estado e chave de deduplicação, sem substituir pgmq por fila própria. Quando necessário, registrar tarefa e alteração de negócio na mesma transação; manter outbox transacional como proposta para publicação de eventos externos. Cron dispara trabalho limitado; o worker executa o processamento. Falhas transitórias podem ter retentativa; permanentes exigem tratamento específico; resultados externos incertos devem ser reconciliados antes de repetir efeitos. Mecanismos concretos permanecem sujeitos a detalhamento.
+
+**PENDÊNCIA DE DECISÃO — parâmetros operacionais de D05.2:** frequência dos agendamentos; fuso operacional e execuções perdidas; máximo de tentativas e políticas/intervalos de backoff; duração e renovação das reservas; concorrência global, por workspace e por provedor; dimensionamento, quantidade de instâncias e capacidade dos workers; planos comerciais, contratação e orçamento máximo; metas de disponibilidade e recuperação; retenção de logs/histórico; limiares de alertas e responsáveis operacionais; organização definitiva do código do worker no monorepositório; procedimentos detalhados de backup, restauração e retomada após desastres. A estrutura de pastas aprovada não é alterada nesta etapa. Demais parâmetros não decididos da D05 e D06–D12 continuam pendentes, incluindo região, backups, RPO/RTO e recuperação de banco e arquivos em D10.
 
 Manter aplicação web sem estado local persistente; usar pool de conexões; paginar resultados; indexar por workspace e período; limitar concorrência por cliente e provedor. Cache financeiro precisa incorporar workspace e autorização, com invalidação após alterações. Agregados podem ser reconstruídos; não substituir a fonte de verdade por cache ou saída de IA.
 
@@ -142,7 +148,7 @@ Observar erros, latência, atraso de sincronização, idade dos dados, custo de 
 
 ## 8. Registro de decisões
 
-Os identificadores abaixo são usados nos demais documentos. D01–D04 e D05.1 são **DECISÃO APROVADA**; D05 é parcialmente decidida. Seus requisitos não transformam estruturas de banco ou detalhes de implementação ainda não definidos em decisões aprovadas.
+Os identificadores abaixo são usados nos demais documentos. D01–D04, D05.1 e a arquitetura principal da D05.2 são **DECISÃO APROVADA**; D05 ainda possui parâmetros operacionais pendentes. Seus requisitos não transformam estruturas de banco ou detalhes de implementação ainda não definidos em decisões aprovadas.
 
 | ID | Status | Conteúdo aprovado |
 |---|---|---|
@@ -153,11 +159,13 @@ Os identificadores abaixo são usados nos demais documentos. D01–D04 e D05.1 s
 
 **DECISÃO APROVADA — D05.1:** Render para Next.js; desenvolvimento local permitido sem contratação de hospedagem; produção em instância paga dimensionada por testes; PostgreSQL no Supabase; segurança e possibilidade de migração preservadas; nenhum plano comercial específico aprovado.
 
-**PENDÊNCIA DE DECISÃO:** D05.2, demais detalhes não decididos da D05 e D06–D12 permanecem abertos. As sugestões abaixo são preservadas como **PROPOSTA TÉCNICA**, sem aprovação implícita pela D05.1 nem autorização para implementação ou contratação.
+**DECISÃO APROVADA — D05.2:** Supabase Queues (pgmq), Render Background Worker separado do Next.js e Supabase Cron; entrega pelo menos uma vez, idempotência persistente, revalidação de permissões, isolamento, minimização, auditoria, recuperação e integridade financeira, conforme seção 6. Enfileirar não autoriza ações financeiras da IA.
+
+**PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, demais detalhes não decididos da D05 e D06–D12 permanecem abertos. As sugestões abaixo são preservadas como **PROPOSTA TÉCNICA**, sem aprovação implícita nem autorização para implementação ou contratação.
 
 | ID | Decisão | Proposta ou critério |
 |---|---|---|
-| D05.2 | Processamento assíncrono | Filas, agendamentos e workers pendentes; fila PostgreSQL e Edge Functions continuam propostas |
+| D05.2 — parâmetros operacionais | Detalhamento da arquitetura principal aprovada | Pendências completas na seção 6; componentes e princípios aprovados não fixam limites, capacidade, planos ou procedimentos |
 | D05 — detalhes restantes | Parâmetros operacionais da hospedagem | Plano comercial, dimensionamento por testes e formato de implantação a definir; plataforma web Render já aprovada em D05.1 |
 | D06 | Provedor Open Finance | Cobertura PF/PJ, contrato, consentimento, qualidade, segurança, SLA e custo |
 | D07 | Cobrança e planos | Assinatura por workspace; escolher provedor, quotas e política de inadimplência |
@@ -177,8 +185,8 @@ Os identificadores abaixo são usados nos demais documentos. D01–D04 e D05.1 s
 | Saldos incorretos | Razão balanceado, precisão decimal, transações, reconciliação e estornos | D03/D11 |
 | Open Finance indisponível ou caro | Adaptador substituível, contrato medido, limites e importação alternativa | D06 |
 | IA incorreta ou onerosa | Ferramentas restritas, avaliações, quotas e confirmação vinculada à proposta | D08 |
-| Dependência de fornecedor | Domínio desacoplado, portabilidade da hospedagem, exportação e restauração testadas | D04/D05.1 aprovadas; D05.2, detalhes restantes da D05 e D10 pendentes |
-| Jobs duplicados ou interrompidos | Idempotência, lease, retentativas e fila de falhas | D05.2 pendente |
+| Dependência de fornecedor | Domínio desacoplado, portabilidade da hospedagem, exportação e restauração testadas | D04/D05.1 e arquitetura principal D05.2 aprovadas; parâmetros operacionais, detalhes restantes da D05 e D10 pendentes |
+| Jobs duplicados ou interrompidos | Idempotência persistente, reservas recuperáveis, retentativas e tratamento de falhas | Arquitetura principal D05.2 aprovada; mecanismos concretos e parâmetros operacionais pendentes |
 | Escopo empresarial excessivo | Critérios explícitos de lançamento e fases com aceite | D01/D12 |
 
 Fontes técnicas consultadas em 23/11/2026. Custos, versões, limites e contratos devem ser revalidados no momento da implementação.
