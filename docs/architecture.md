@@ -18,7 +18,7 @@ A autorização para criar esta documentação não representa aprovação autom
 
 Cada usuário pode possuir seu espaço pessoal e participar de espaços familiares e empresariais. Os espaços mantêm dados isolados. A IA interpreta resultados financeiros determinísticos e somente realiza alterações com autorização explícita do usuário. São requisitos controle de acesso por workspace, PostgreSQL RLS, migrations versionadas, auditoria, escalabilidade, segurança e consideração da LGPD.
 
-**DECISÃO APROVADA — stack:** Next.js App Router, React, TypeScript, Tailwind CSS, PostgreSQL, Supabase para infraestrutura inicial, autenticação e armazenamento, OpenAI API, GitHub e Codex. Open Finance será contratado por meio de provedores especializados; sua utilização não é presumida gratuita.
+**DECISÃO APROVADA — stack:** Next.js App Router, React, TypeScript, Tailwind CSS, PostgreSQL, Supabase para infraestrutura inicial, autenticação e armazenamento, OpenAI API, GitHub e Codex. Conforme D06, o lançamento comercial utilizará importação OFX/CSV e cadastro manual de contas e movimentações. A conexão automática por Open Finance não é obrigatória no lançamento; Pluggy, Belvo ou outros provedores serão avaliados posteriormente, sem contratação nesta etapa e sem presumir gratuidade.
 
 ## 3. Organização e limites
 
@@ -44,7 +44,7 @@ Somente os cinco documentos existentes são atualizados nesta etapa; a estrutura
 | apps/web | Interface, sessão, Route Handlers, Server Actions e composição dos casos de uso | Autorizar cada operação; componentes de cliente recebem somente dados necessários |
 | finance-core | Valores monetários, lançamentos, transferências, obrigações, conciliação e cálculos | Sem dependência de Next.js, Supabase ou OpenAI; persistência através de interfaces |
 | ai-engine | Contexto autorizado, ferramentas, propostas, avaliações e limites de IA | Não possui acesso irrestrito ao banco nem poder de aprovação |
-| integrations | Adaptadores Supabase, Open Finance, OpenAI, cobrança e armazenamento | Isola SDKs e contratos externos; não duplica regras financeiras |
+| integrations | Adaptadores Supabase, arquivos OFX/CSV, futuros provedores bancários, OpenAI, cobrança e armazenamento | Isola formatos, SDKs e contratos externos; não duplica regras financeiras nem escreve diretamente no ledger |
 | shared | Tipos de contratos, validações de fronteira e erros comuns | Sem segredos, acesso a rede ou importação dos demais pacotes |
 | supabase/migrations | Evolução futura de tabelas, restrições, funções e RLS | Fonte versionada do esquema, sem alterações manuais não rastreadas |
 | supabase/functions | Possíveis entradas curtas para eventos, sujeitas a detalhamento | Não substitui o worker Render e o Supabase Cron aprovados em D05.2; validar identidade/origem |
@@ -80,7 +80,7 @@ Convites são individuais por e-mail, com validade, uso único e aceitação obr
 | Planejamento | Orçamentos, recorrências e projeções | Metas pessoais | Metas familiares | Centros de custo e obrigações |
 | Investimentos | Acompanhamento e relatórios; sem ordens | Carteira pessoal | Registros compartilhados autorizados | Carteira empresarial |
 | Cartões | Compras, parcelas, faturas e liquidação | Cartões pessoais | Registros familiares | Cartões empresariais |
-| Importação e conciliação | Arquivos, deduplicação e revisão | Conexões PF | Titularidade e compartilhamento a detalhar | Conexões PJ e representação autorizada |
+| Importação e conciliação | OFX/CSV, prévia, seleção, confirmação, deduplicação e revisão; integração automática futura | Contas e registros pessoais autorizados | Dados do workspace familiar, sem acesso implícito aos originais pessoais | Contas e registros empresariais nas áreas autorizadas |
 | Relatórios | Saldos, categorias, fluxo e projeções | Visão pessoal | Visão familiar | Visão gerencial por área autorizada |
 | IA | Perguntas, sugestões e autorização explícita | Dados pessoais | Dados do espaço familiar | Dados das áreas permitidas |
 | Assinaturas | Plano, limites e consumo; gestão exclusiva do owner | Oferta a detalhar | Oferta a detalhar | Oferta a detalhar |
@@ -108,11 +108,33 @@ Lançamentos confirmados são preservados: correções por estorno e novo lança
 
 **Consequência de D04.3 para os fluxos financeiros:** a unidade crítica de persistência é executada em função transacional PostgreSQL. **PROPOSTA TÉCNICA:** o backend invoca a função pelo Supabase SDK, com identidade e escopo validados; escritas separadas pelo SDK não devem fragmentar a atomicidade de D03. Funções PostgreSQL não são Edge Functions nem definem o executor assíncrono.
 
-### Open Finance
+### Importação bancária e integração futura — D06
 
-Criar sessão de conexão no provedor → redirecionar para jornada oficial de consentimento/autenticação → receber retorno verificado → armazenar identificadores e referência segura ao segredo → sincronizar por jobs → normalizar dados → detectar duplicatas → conciliar → publicar registros válidos.
+**DECISÃO APROVADA — D06:** o lançamento comercial terá importação OFX/CSV, cadastro manual de contas financeiras e movimentações e arquitetura preparada para integrações bancárias futuras. Open Finance automático não é obrigatório no lançamento. Pluggy, Belvo ou outros fornecedores serão avaliados posteriormente; não há contratação ou implementação de provedores autorizada nesta etapa.
 
-Cada conexão e consentimento pertence a um workspace, mesmo quando a pessoa administra vários. PF e PJ precisam ser avaliados separadamente na cobertura do fornecedor. Revogação interrompe novas coletas; tratamento dos dados já coletados segue a política de retenção e base legal aplicável. O [Banco Central](https://www.bcb.gov.br/meubc/faqs/p/como-levar-seus-dados-de-um-banco-para-outro) informa a necessidade de consentimento para compartilhamento no Open Finance.
+**Revisão explícita de escopo:** esta decisão substitui o compromisso anterior de exigir Open Finance no lançamento comercial. Permanecem preservados os contextos pessoal, familiar e empresarial, investimentos, planejamento, relatórios, projeções, IA e exclusões de D01. A mudança se limita ao canal de aquisição bancária e ao momento de disponibilização da conexão automática.
+
+**DECISÃO APROVADA — separação de responsabilidades:** aquisição → normalização → conciliação → registro financeiro. Parsers e adaptadores produzem dados normalizados; nenhum deles escreve diretamente no ledger. Cadastro manual e importações respeitam o mesmo núcleo financeiro e as funções transacionais PostgreSQL de D04.
+
+O fluxo de importação deve oferecer upload privado e validado, processamento determinístico, prévia das movimentações, seleção dos itens, identificação de duplicidades, revisão das ambiguidades e confirmação do usuário para o conjunto selecionado. Antes do registro, revalidar permissões, workspace, área autorizada e condições financeiras. Preservar rastreabilidade entre arquivo, observação importada e lançamento.
+
+**DECISÃO APROVADA — formatos:** suportar variantes OFX SGML/XML explicitamente validadas, formato CSV padrão, mapeamento flexível de colunas e modelos reutilizáveis por workspace. Datas, valores e formatos ambíguos exigem confirmação. Exibir erros e registros rejeitados. Não depender de IA para interpretar valores financeiros nem prometer compatibilidade universal com extratos bancários.
+
+**DECISÃO APROVADA — integridade:** lotes têm processamento parcial recuperável, com atomicidade por operação financeira e idempotência persistente. Ledger, saldos e auditoria financeira são atualizados na mesma transação. Falhas e reprocessamentos não duplicam lançamentos; o lote inteiro não precisa constituir uma transação financeira indivisível. Correções de confirmados ocorrem exclusivamente por estorno e novo lançamento.
+
+Transferências internas ao workspace não são receitas/despesas; pagamentos de faturas não duplicam despesas das compras. Saldos iniciais devem ser identificáveis e balanceados, sem classificação automática como receita. Ambiguidades não produzem classificação financeira definitiva sem resolução autorizada.
+
+**DECISÃO APROVADA — integração futura:** camada independente de fornecedor, contrato normalizado e versionado, identificadores internos estáveis e referências externas separadas. Sincronização controlada e recuperável, com gestão de consentimentos e revogações quando aplicável, preservando o histórico financeiro confirmado.
+
+**PROPOSTA TÉCNICA — contrato conceitual:** representar origem, conta, observação de transação, identificadores externos, saldo observado, consentimento, execução de sincronização e vínculos de conciliação. Manter workspace e proveniência verificáveis; distinguir estado externo de confirmação no ledger, datas de ocorrência/contabilização/coleta e saldo observado de saldo interno. Campos ausentes não devem ser inventados. Importação manual não cria consentimento Open Finance fictício. Campos, cardinalidades e capacidades de cada adaptador permanecem sujeitos a detalhamento.
+
+**PROPOSTA TÉCNICA — execução:** Next.js autoriza e coordena upload, prévia e confirmação; pgmq entrega tarefas ao Render Background Worker, que processa arquivos e solicita operações financeiras às funções PostgreSQL. Tarefas curtas podem terminar em uma execução; importações maiores usam etapas recuperáveis e progresso persistido. Supabase Cron dispara rotinas periódicas quando definidas. Mensagens contêm referências mínimas; reconhecer processamento após persistência dos efeitos. A confirmação do conjunto deve ser vinculada à versão revisada; alterações materiais exigem nova confirmação.
+
+**DECISÃO APROVADA — limites e falhas:** limites configuráveis de upload, registros, armazenamento, concorrência e processamento; recuperação controlada de falhas transitórias; rejeição de arquivos inválidos sem tentativas infinitas.
+
+**PENDÊNCIA DE DECISÃO:** valores numéricos dos limites, versões OFX e layouts homologados, detalhes do CSV padrão, classificação e contrapartidas, duração das reservas, concorrência, retries, retenção/descarte e procedimentos de recuperação. Permanecem pendentes políticas de sincronização e critérios comerciais e técnicos dos futuros provedores, além das dependências de D07–D12.
+
+**PROPOSTA TÉCNICA — conexão automática futura:** jornada oficial de consentimento/autenticação → retorno verificado → referências externas e segredos protegidos → sincronização por jobs → normalização → deduplicação/conciliação → registro pelas funções financeiras. Conexões e consentimentos pertencem a um workspace; cobertura PF/PJ será avaliada por fornecedor. Revogação interrompe novas coletas; retenção dos dados existentes depende da política aplicável. Esse fluxo não está implementado nem contratado.
 
 ### Assinaturas
 
@@ -134,7 +156,7 @@ O worker não contorna D03/D04: ledger de partidas dobradas, saldos armazenados 
 
 **PROPOSTA TÉCNICA — detalhamento:** consumidores em lotes pequenos; registro operacional de jobs com workspace, tipo, referência de payload, tentativas, reserva, próxima execução, estado e chave de deduplicação, sem substituir pgmq por fila própria. Quando necessário, registrar tarefa e alteração de negócio na mesma transação; manter outbox transacional como proposta para publicação de eventos externos. Cron dispara trabalho limitado; o worker executa o processamento. Falhas transitórias podem ter retentativa; permanentes exigem tratamento específico; resultados externos incertos devem ser reconciliados antes de repetir efeitos. Mecanismos concretos permanecem sujeitos a detalhamento.
 
-**PENDÊNCIA DE DECISÃO — parâmetros operacionais de D05.2:** frequência dos agendamentos; fuso operacional e execuções perdidas; máximo de tentativas e políticas/intervalos de backoff; duração e renovação das reservas; concorrência global, por workspace e por provedor; dimensionamento, quantidade de instâncias e capacidade dos workers; planos comerciais, contratação e orçamento máximo; metas de disponibilidade e recuperação; retenção de logs/histórico; limiares de alertas e responsáveis operacionais; organização definitiva do código do worker no monorepositório; procedimentos detalhados de backup, restauração e retomada após desastres. A estrutura de pastas aprovada não é alterada nesta etapa. Demais parâmetros não decididos da D05 e D06–D12 continuam pendentes, incluindo região, backups, RPO/RTO e recuperação de banco e arquivos em D10.
+**PENDÊNCIA DE DECISÃO — parâmetros operacionais de D05.2:** frequência dos agendamentos; fuso operacional e execuções perdidas; máximo de tentativas e políticas/intervalos de backoff; duração e renovação das reservas; concorrência global, por workspace e por provedor; dimensionamento, quantidade de instâncias e capacidade dos workers; planos comerciais, contratação e orçamento máximo; metas de disponibilidade e recuperação; retenção de logs/histórico; limiares de alertas e responsáveis operacionais; organização definitiva do código do worker no monorepositório; procedimentos detalhados de backup, restauração e retomada após desastres. A estrutura de pastas aprovada não é alterada nesta etapa. Demais parâmetros não decididos da D05 e detalhamentos pendentes da D06 e D07–D12 continuam pendentes, incluindo região, backups, RPO/RTO e recuperação de banco e arquivos em D10.
 
 Manter aplicação web sem estado local persistente; usar pool de conexões; paginar resultados; indexar por workspace e período; limitar concorrência por cliente e provedor. Cache financeiro precisa incorporar workspace e autorização, com invalidação após alterações. Agregados podem ser reconstruídos; não substituir a fonte de verdade por cache ou saída de IA.
 
@@ -148,7 +170,7 @@ Observar erros, latência, atraso de sincronização, idade dos dados, custo de 
 
 ## 8. Registro de decisões
 
-Os identificadores abaixo são usados nos demais documentos. D01–D04, D05.1 e a arquitetura principal da D05.2 são **DECISÃO APROVADA**; D05 ainda possui parâmetros operacionais pendentes. Seus requisitos não transformam estruturas de banco ou detalhes de implementação ainda não definidos em decisões aprovadas.
+Os identificadores abaixo são usados nos demais documentos. D01–D04, D05.1, a arquitetura principal da D05.2 e as decisões arquiteturais da D06 são **DECISÃO APROVADA**. D05 e D06 ainda possuem parâmetros e detalhamentos pendentes. Seus requisitos não aprovam automaticamente estruturas de banco, contratos comerciais ou detalhes de implementação.
 
 | ID | Status | Conteúdo aprovado |
 |---|---|---|
@@ -161,13 +183,15 @@ Os identificadores abaixo são usados nos demais documentos. D01–D04, D05.1 e 
 
 **DECISÃO APROVADA — D05.2:** Supabase Queues (pgmq), Render Background Worker separado do Next.js e Supabase Cron; entrega pelo menos uma vez, idempotência persistente, revalidação de permissões, isolamento, minimização, auditoria, recuperação e integridade financeira, conforme seção 6. Enfileirar não autoriza ações financeiras da IA.
 
-**PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, demais detalhes não decididos da D05 e D06–D12 permanecem abertos. As sugestões abaixo são preservadas como **PROPOSTA TÉCNICA**, sem aprovação implícita nem autorização para implementação ou contratação.
+**DECISÃO APROVADA — D06:** lançamento comercial com OFX/CSV e cadastro manual; prévia, seleção e confirmação; deduplicação e revisão de ambiguidades; processamento parcial recuperável e atomicidade por operação; permissões específicas; arquivos privados e retenção limitada; integração futura independente de fornecedor. Open Finance automático deixa de ser requisito do lançamento. Regras e limites de aprovação estão descritos na seção 5.
+
+**PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, demais detalhes não decididos da D05 e detalhamentos pendentes da D06 e D07–D12 permanecem abertos. As sugestões abaixo são preservadas como **PROPOSTA TÉCNICA**, sem aprovação implícita nem autorização para implementação ou contratação.
 
 | ID | Decisão | Proposta ou critério |
 |---|---|---|
 | D05.2 — parâmetros operacionais | Detalhamento da arquitetura principal aprovada | Pendências completas na seção 6; componentes e princípios aprovados não fixam limites, capacidade, planos ou procedimentos |
 | D05 — detalhes restantes | Parâmetros operacionais da hospedagem | Plano comercial, dimensionamento por testes e formato de implantação a definir; plataforma web Render já aprovada em D05.1 |
-| D06 | Provedor Open Finance | Cobertura PF/PJ, contrato, consentimento, qualidade, segurança, SLA e custo |
+| D06 — detalhamento e integração futura | Parâmetros da importação e futura seleção de provedor | Limites, retenção, homologação de formatos, contrapartidas, recuperação, políticas de sincronização e critérios técnicos/comerciais; decisões arquiteturais da seção 5 já aprovadas |
 | D07 | Cobrança e planos | Assinatura por workspace; escolher provedor, quotas e política de inadimplência |
 | D08 | IA | Modelos, orçamento, contexto, retenção, limiares de qualidade e autorizações |
 | D09 | Privacidade e requisitos jurídicos | Bases legais, responsabilidades, retenção, transferências internacionais e público etário |
@@ -183,7 +207,7 @@ Os identificadores abaixo são usados nos demais documentos. D01–D04, D05.1 e 
 |---|---|---|
 | Vazamento entre espaços | RLS, FKs compostas, testes adversariais, cache e arquivos segregados | D02 |
 | Saldos incorretos | Razão balanceado, precisão decimal, transações, reconciliação e estornos | D03/D11 |
-| Open Finance indisponível ou caro | Adaptador substituível, contrato medido, limites e importação alternativa | D06 |
+| Open Finance indisponível ou caro | Preservar importação manual e adaptadores substituíveis; avaliar cobertura, segurança e custo antes de contratar | D06: integração automática futura, sem bloquear o lançamento manual |
 | IA incorreta ou onerosa | Ferramentas restritas, avaliações, quotas e confirmação vinculada à proposta | D08 |
 | Dependência de fornecedor | Domínio desacoplado, portabilidade da hospedagem, exportação e restauração testadas | D04/D05.1 e arquitetura principal D05.2 aprovadas; parâmetros operacionais, detalhes restantes da D05 e D10 pendentes |
 | Jobs duplicados ou interrompidos | Idempotência persistente, reservas recuperáveis, retentativas e tratamento de falhas | Arquitetura principal D05.2 aprovada; mecanismos concretos e parâmetros operacionais pendentes |

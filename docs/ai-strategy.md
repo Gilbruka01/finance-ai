@@ -25,6 +25,10 @@ Referências internas: [arquitetura](architecture.md), [modelo de dados](databas
 | Investimentos | Explicar posição e resultados calculados | Dados autorizados, data/fonte e distinção entre saldo e valorização; sem ordens |
 | Projeções | Explicar cenários calculados | Parte do escopo D01; métodos e cobertura ainda pendentes, com premissas explícitas e avaliação |
 
+**DECISÃO APROVADA — D06:** a importação OFX/CSV interpreta datas e valores por processamento determinístico, sem depender de IA. Formatos ambíguos exigem confirmação do usuário. As propostas de extração documental e conciliação assistida não autorizam substituir parsers determinísticos nem atribuir ao modelo a decisão final sobre duplicidades ou classificação financeira ambígua.
+
+O lançamento pode operar com dados reais cadastrados manualmente ou importados, sem conexão automática Open Finance. A ausência de conexão não reduz os requisitos de proveniência, integridade, isolamento e autorização da IA.
+
 **DECISÃO APROVADA — D01:** primeira versão sem movimentação de dinheiro, iniciação de pagamentos, emissão de notas fiscais, folha, escrituração contábil oficial, ERP completo ou ordens de investimento. Gestão de investimentos está incluída; extensão das análises, métodos de projeção e eventual orientação personalizada permanecem sem definição, não são autorizadas por inferência. Recorrências aprovadas são automação determinística; IA não pode alterar suas regras por conta própria.
 
 ## 3. Arquitetura de execução
@@ -70,6 +74,10 @@ Valores saem de consultas e funções determinísticas. Saldos consultados são 
 
 Respostas financeiras devem informar período, moeda, data de atualização e referências verificáveis. Distinguir realizado, previsto e estimado; alertar para contas desconectadas, importações incompletas e dados antigos. Quando não há dados suficientes, pedir informação ou abster-se. As referências precisam ser autorizadas também ao abrir a tela de detalhe.
 
+**Consequência de D06:** distinguir dados cadastrados manualmente, observações importadas, lançamentos confirmados e futuros dados sincronizados. Uma prévia não é saldo realizado. Informar cobertura do período, rejeições e importações parciais quando relevantes à resposta. A referência ao lote ou arquivo não concede acesso ao extrato original completo; esse acesso exige permissão específica.
+
+**PROPOSTA TÉCNICA:** fornecer ao modelo somente dados normalizados e minimizados necessários à finalidade, com referências internas autorizadas. Não enviar automaticamente o arquivo original nem tratar instruções contidas em descrições ou extratos como comandos.
+
 Conversas pertencem a um workspace e inicialmente são privadas ao autor. Ao mudar de espaço, abrir ou recuperar conversa desse espaço sem carregar histórico do anterior. Cache e resultados temporários devem considerar workspace, usuário/permissões, versão dos dados e política de expiração.
 
 **PROPOSTA TÉCNICA:** não usar banco vetorial no início para responder cálculos. Consulta estruturada atende valores e períodos. Busca semântica em documentos pode ser adicionada quando houver necessidade comprovada; se adotada, filtros de workspace, autoria e finalidade precisam ser aplicados antes e depois da recuperação, inclusive em embeddings e citações.
@@ -87,6 +95,10 @@ Conversas pertencem a um workspace e inicialmente são privadas ao autor. Ao mud
 7. Exibir resultado e referências. Correção posterior respeita estorno e políticas do núcleo financeiro, sem apagar histórico.
 
 Concorrência: bloquear/reivindicar execução de forma atômica; depois de interrupção, reconciliar resultado persistido antes de repetir. Uma aprovação não autoriza lote aberto ou futuras ações indefinidas. Para lote finito, apresentar quantidade, escopo e itens; não acrescentar itens após confirmar.
+
+**DECISÃO APROVADA — D06:** a confirmação de importação corresponde ao conjunto selecionado pelo usuário, sujeito à revalidação de permissões e condições financeiras. Ela não amplia a autonomia da IA. Sugestões de IA que produzam alterações financeiras continuam sujeitas à autorização explícita aplicável; upload, prévia ou enfileiramento não constituem essa autorização.
+
+O processamento parcial recuperável não autoriza novos itens nem repetição de efeitos. Correções de lançamentos confirmados continuam exigindo estorno e novo lançamento pelas funções financeiras transacionais.
 
 **DECISÃO APROVADA:** não há exigência geral de dupla aprovação; o usuário individualmente autorizado pode autorizar sua alteração pela IA. Isso não permite à IA se autoaprovar. Alterações de confirmados exigem estorno e novo lançamento com autoria, justificativa e histórico. Proposta de alterar categoria não pode contornar imutabilidade ou reescrever itens do razão diretamente. Transferências somente entre contas do mesmo workspace, sem receita/despesa; não oferecer ferramenta de transferência direta entre espaços.
 
@@ -127,6 +139,6 @@ Quotas por usuário/workspace, orçamento global, limites de contexto e circuit 
 
 Se o provedor falhar ou o orçamento acabar, manter lançamentos e relatórios determinísticos disponíveis e informar indisponibilidade da IA. Não fabricar resposta financeira para disfarçar timeout. Tarefas longas seguem a estratégia de jobs da arquitetura, respeitando limites do executor escolhido.
 
-**PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, conforme lista completa em [architecture.md, seção 6](architecture.md#6-assíncrono-falhas-e-escalabilidade): agendamentos/fuso/execuções perdidas, tentativas/backoff, reservas/renovação, concorrência, dimensionamento/instâncias/capacidade, planos/orçamento, metas, retenção de logs/histórico, alertas/responsáveis e organização do worker. Backups, restauração e retomada após desastres seguem pendentes em D10. D06–D12 permanecem pendentes, incluindo modelos, custos e retenção de IA em D08/D09. A aprovação arquitetural não autoriza execução de modelos, configuração ou contratação.
+**PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, conforme lista completa em [architecture.md, seção 6](architecture.md#6-assíncrono-falhas-e-escalabilidade): agendamentos/fuso/execuções perdidas, tentativas/backoff, reservas/renovação, concorrência, dimensionamento/instâncias/capacidade, planos/orçamento, metas, retenção de logs/histórico, alertas/responsáveis e organização do worker. Backups, restauração e retomada após desastres seguem pendentes em D10. As decisões arquiteturais da D06 estão aprovadas, com detalhamentos ainda pendentes; D07–D12 permanecem pendentes, incluindo modelos, custos e retenção de IA em D08/D09. A aprovação arquitetural não autoriza execução de modelos, configuração ou contratação.
 
 Fontes oficiais consultadas em 23/11/2026; validar APIs, contratos, modelos e preços antes da implementação.

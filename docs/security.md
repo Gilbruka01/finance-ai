@@ -8,7 +8,9 @@ Data: 23/11/2026. Estado: planejamento de controles, sem configuração de servi
 
 **DECISÃO APROVADA — D01–D03:** gestão pessoal, familiar e empresarial, incluindo investimentos/projeções sem executar ordens ou pagamentos; três tipos de workspace; permissões individuais e por área empresarial; cópia independente pessoal/familiar; revogação imediata; partidas dobradas, estorno e novo lançamento, confirmação automática válida e saldos armazenados com integridade.
 
-**PROPOSTA TÉCNICA:** mecanismos de proteção deste documento materializam os requisitos aprovados, mas ainda não foram implementados ou aprovados em detalhe. **PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, demais detalhes não decididos da D05 e D06–D12 do [registro de decisões](architecture.md#8-registro-de-decisões). D05.1 e a arquitetura principal da D05.2 estão aprovadas; documentação não equivale a controles implementados nem certificação de conformidade jurídica.
+**PROPOSTA TÉCNICA:** mecanismos de proteção deste documento materializam os requisitos aprovados, mas ainda não foram implementados ou aprovados em detalhe. **PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, demais detalhes não decididos da D05 e detalhamentos pendentes da D06 e D07–D12 do [registro de decisões](architecture.md#8-registro-de-decisões). D05.1 e a arquitetura principal da D05.2 estão aprovadas; documentação não equivale a controles implementados nem certificação de conformidade jurídica.
+
+**DECISÃO APROVADA — D06:** importação OFX/CSV e cadastro manual no lançamento, com permissões específicas, arquivos privados, validação segura, processamento determinístico, confirmação do conjunto selecionado, auditoria e retenção limitada dos originais. Prazo de retenção, limites numéricos e mecanismos concretos permanecem pendentes. Open Finance automático será avaliado posteriormente.
 
 Fronteiras: navegador não confiável; backend autenticado e autorizado; banco com RLS e grants; processadores operacionais privilegiados; provedores externos; modelo de IA e documentos tratados como fontes não confiáveis para instruções. Cada passagem precisa de validação independente.
 
@@ -29,7 +31,10 @@ Aplicar limitação de tentativas em login, convites, exportações, IA e endpoi
 | Ação | Owner | Admin | Editor | Viewer |
 |---|---|---|---|---|
 | Consultar dados financeiros | Sim | No escopo concedido | No escopo concedido | No escopo de leitura concedido |
-| Criar lançamentos, conciliar e executar correções permitidas | Sim | No escopo concedido | No escopo concedido | Não |
+| Confirmar e registrar movimentações e executar correções permitidas | Sim | No escopo concedido | No escopo concedido | Não |
+| Preparar importações | Sim | Mediante permissão específica no escopo concedido | Mediante permissão específica no escopo concedido | Não |
+| Conciliar e resolver duplicidades | Sim | Mediante permissão específica no escopo concedido | Mediante permissão específica no escopo concedido | Não |
+| Acessar extratos originais completos | No próprio workspace | Somente com permissão específica e cobertura de todo o conteúdo | Somente com permissão específica e cobertura de todo o conteúdo | Somente com permissão específica de leitura e cobertura de todo o conteúdo |
 | Configurar categorias e orçamentos | Sim | No escopo concedido | No escopo concedido | Não |
 | Convidar/remover editor e viewer | Sim | Dentro da delegação concedida | Não | Não |
 | Nomear/remover admin | Sim | Não | Não | Não |
@@ -38,6 +43,10 @@ Aplicar limitação de tentativas em login, convites, exportações, IA e endpoi
 | Exportar todo o workspace e consultar auditoria organizacional | Sim | Somente se todas as áreas necessárias estiverem autorizadas | Não | Não |
 | Transferir propriedade | Autoriza; novo owner precisa aceitar | Não | Não | Não |
 | Encerrar workspace | Sim, com reautenticação proposta | Não | Não | Não |
+
+**DECISÃO APROVADA — D06:** distinguir consulta financeira, preparação de importações, confirmação/registro de movimentações, conciliação/resolução de duplicidades e acesso aos extratos originais completos. Aplicar workspace, área autorizada, RLS e revogações em todos os caminhos. Preparar ou visualizar uma importação não concede automaticamente permissão para registrar movimentações ou obter o arquivo completo.
+
+**PROPOSTA TÉCNICA:** a matriz acima detalha concessões sujeitas a revisão. A prévia deve limitar-se às áreas autorizadas; quando um extrato completo incluir dados fora do escopo do usuário, negar seu acesso integral. A confirmação exige autorização sobre todos os itens selecionados. Revalidar antes da efetivação, inclusive após permanência na fila. O próprio usuário pode preparar e confirmar se possuir ambas as permissões; não se cria exigência geral de dupla aprovação.
 
 Papéis não dão poderes bancários externos. Participação familiar ou empresarial não concede visibilidade do espaço pessoal dos membros. Suporte não recebe acesso financeiro por padrão. Controle integral do owner se limita ao próprio workspace; não permite acessar originais pessoais apenas porque uma cópia foi compartilhada.
 
@@ -75,11 +84,21 @@ Permissões por área devem alcançar consultas, agregados, exportações, RPCs,
 
 Uploads: limitar tamanho e tipos, conferir conteúdo real, usar quarentena e varredura conforme o formato, bloquear execução de conteúdo, evitar servir HTML ativo no domínio da aplicação. Downloads e exclusões também exigem autorização. Exportações devem ter prazo de expiração e auditoria.
 
+**DECISÃO APROVADA — D06:** arquivos OFX/CSV ficam em armazenamento privado, com validação de uploads e proteção contra conteúdo malicioso. Aplicar limites configuráveis de upload, registros, armazenamento, concorrência e processamento. Valores numéricos serão definidos por testes; arquivos inválidos são rejeitados sem tentativas infinitas.
+
+**PROPOSTA TÉCNICA:** validar conteúdo e estrutura além de extensão/MIME; usar nomes internos gerados, quarentena e limites de recursos do parser. Em OFX/XML, desabilitar resolução externa e mecanismos que permitam acesso indevido a rede ou arquivos. Em CSV, tratar células como dados, sem executar fórmulas; escapar conteúdo na interface e proteger futuras exportações para planilhas. Erros e rejeições devem ser apresentados sem expor dados de outros espaços.
+
+**DECISÃO APROVADA — retenção:** manter histórico de importações e evidências de auditoria, com retenção limitada dos arquivos originais. Minimizar dados financeiros em logs e interações com IA. Prazo exato e descarte permanecem pendentes.
+
+**PROPOSTA TÉCNICA:** separar retenção do original, observações normalizadas, evidências de confirmação/idempotência e auditoria. Registrar descarte sem manter cópias integrais ocultas em logs. A política deve abranger backups e reprocessamento; excluir o original não autoriza apagar o histórico financeiro confirmado.
+
 Segredos ficam em gerenciador apropriado, separados por ambiente, com rotação e acesso restrito. Não expor chaves OpenAI, provedor bancário, webhook ou service role em variáveis públicas, bundles, logs, GitHub ou prompts do Codex. Chaves públicas do Supabase só são aceitáveis com grants e RLS corretos.
 
 Proteger contra XSS com escaping e sanitização de conteúdo renderizado; adotar CSP compatível com a aplicação. Não renderizar HTML arbitrário gerado pela IA. Proteger endpoints de busca de URLs contra SSRF com destinos permitidos, restrições de rede e validação de redirecionamentos. Cache, logs, exportações e respostas de erro não devem revelar outro workspace.
 
 ## 6. Open Finance e cobrança
+
+**DECISÃO APROVADA — D06:** Open Finance automático não é obrigatório no lançamento. Os controles bancários abaixo se aplicam à futura integração, sem contratação ou implementação nesta etapa. Upload e confirmação de arquivo não constituem consentimento bancário nem autorizam coletas futuras.
 
 **PROPOSTA TÉCNICA:** autenticação bancária na jornada oficial da instituição/provedor. FINANCE AI não solicita nem persiste senha bancária, OTP, CVV ou credenciais de internet banking. Armazenar identificadores externos e referências a segredos; tokens operacionais indispensáveis ficam protegidos no servidor, com ciclo de vida e escopo mínimos.
 
@@ -137,5 +156,8 @@ Resposta a incidente: detectar e classificar → conter acesso/integração → 
 - Proposta da IA alterada, expirada, já executada ou com permissão revogada não executa.
 - Restauração recupera banco e arquivos e preserva isolamento; exclusões são reaplicadas conforme política.
 - Migrations e novos endpoints não entram em produção sem verificações de autorização e dados sintéticos.
+- Preparação, confirmação, conciliação e acesso a extratos completos respeitam permissões distintas; prévias não revelam áreas não autorizadas.
+- Arquivos inválidos ou maliciosos são rejeitados com consumo limitado de recursos; datas/valores ambíguos não geram registro definitivo sem resolução.
+- Lote interrompido retoma sem duplicar efeitos; cada operação mantém ledger, saldos e auditoria atômicos; descarte do original respeita a política sem apagar lançamentos confirmados.
 
 Fontes consultadas em 23/11/2026; validar regras jurídicas e contratos antes de operar com dados reais.

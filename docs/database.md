@@ -12,7 +12,9 @@ Data: 23/11/2026. Estado: modelo lógico proposto; não contém migrations execu
 
 **DECISÃO APROVADA — D05.2: arquitetura principal:** Supabase Queues (pgmq) para persistência e entrega das tarefas, Render Background Worker separado do Next.js para execução e Supabase Cron para disparos periódicos. Entrega pelo menos uma vez exige idempotência persistente, revalidação de permissões e escopo, mensagens mínimas, auditoria e recuperação de falhas, preservando D03/D04 e a autorização explícita da IA.
 
-**PROPOSTA TÉCNICA:** tabelas, campos, tipos, cardinalidades, índices e detalhes físicos abaixo continuam propostas até a fase de implementação. A escolha de funções transacionais está aprovada, mas seus contratos, assinaturas e mecanismos de concorrência não estão definidos. As decisões orientam o modelo sem aprovar seu desenho físico completo. **PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, demais detalhes não decididos da D05, D06–D12 e demais pontos do [registro de arquitetura](architecture.md#8-registro-de-decisões).
+**DECISÃO APROVADA — D06:** importação OFX/CSV e cadastro manual no lançamento, com prévia, seleção, confirmação e rastreabilidade; processamento parcial recuperável de lotes, atomicidade por operação financeira e idempotência persistente. Integração bancária futura usa contrato normalizado/versionado, IDs internos estáveis e referências externas separadas. Essas decisões não aprovam automaticamente tabelas, campos ou índices.
+
+**PROPOSTA TÉCNICA:** tabelas, campos, tipos, cardinalidades, índices e detalhes físicos abaixo continuam propostas até a fase de implementação. A escolha de funções transacionais está aprovada, mas seus contratos, assinaturas e mecanismos de concorrência não estão definidos. As decisões orientam o modelo sem aprovar seu desenho físico completo. **PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, demais detalhes não decididos da D05, detalhamentos pendentes da D06 e D07–D12 e demais pontos do [registro de arquitetura](architecture.md#8-registro-de-decisões).
 
 Convenções propostas:
 
@@ -114,19 +116,37 @@ Saldos de ativos usam débitos menos créditos; passivos usam créditos menos d�
 
 ## 5. Open Finance, importações e processamento
 
+**DECISÃO APROVADA — D06:** arquivo, observação importada e lançamento financeiro devem ser rastreáveis. A preparação e a prévia não alteram saldos. O usuário confirma o conjunto selecionado; permissões e condições financeiras são revalidadas antes do registro. A operação financeira confirma atomicamente ledger, saldos e auditoria, com idempotência persistente; o lote admite conclusão parcial e retomada.
+
+Saldos iniciais são identificáveis e balanceados, sem classificação automática como receita. Transferências internas não geram receita/despesa; pagamentos de faturas não repetem as despesas das compras. Ambiguidades permanecem sem classificação definitiva até resolução autorizada. Confirmados são corrigidos exclusivamente por estorno e novo lançamento.
+
+**PROPOSTA TÉCNICA — distinção de modelos:** as entidades abaixo representam um modelo lógico, não migrations aprovadas. Conexões, consentimentos e sincronizações com provedores são destinados à integração futura. Contas manuais e importações de arquivos não dependem da existência de conexão bancária ou consentimento Open Finance.
+
 | Entidade | Campos principais | Relações e invariantes |
 |---|---|---|
 | bank_connections | workspace_id, provider, external_connection_id, status, secret_ref, last_synced_at | Conexão pertence a um único workspace; segredo fica fora da API de dados |
 | bank_consents | workspace_id, connection_id, external_consent_id, scopes, status, granted_at, expires_at, revoked_at | Histórico de consentimentos; renovação não apaga evidências anteriores |
 | external_accounts | workspace_id, connection_id, external_account_id, financial_account_id opcional | Conta externa mapeada para conta interna; identificador único na conexão |
 | sync_runs | workspace_id, connection_id, status, cursor, started_at, finished_at, error_code | Checkpoint para reprocessamento; cursor avançado somente após persistência |
-| import_batches | workspace_id, source, file_document_id opcional, sync_run_id opcional, state | Agrupa uma importação manual ou sincronização |
-| imported_records | workspace_id, batch_id, external_account_id opcional, external_record_id opcional, fingerprint, raw_ref, normalized_data, state | Registro de origem preservado conforme retenção; esquema normalizado validado |
-| reconciliation_links | workspace_id, imported_record_id, transaction_id, allocated_amount, match_method | Associação explícita; soma alocada controlada; suporta divisões sem duplicar lançamentos |
+| import_batches | workspace_id, source, file_document_id opcional, sync_run_id opcional, state, requested_by, parser_version, mapping_version, confirmation_ref | Lote com prévia e conjunto selecionado rastreável; resultados parciais e retomada; campos e estados físicos propostos |
+| imported_records | workspace_id, batch_id, source_record_ref, external_record_id opcional, fingerprint, raw_ref opcional, normalized_data, normalization_version, state | Observação de origem distinta do lançamento; identificação estável dentro do lote; bruto sujeito à retenção |
+| reconciliation_links | workspace_id, imported_record_id, transaction_id, allocated_amount, match_method, resolution_actor | Associação rastreável e autorizada; preserva lançamento existente; cardinalidades e alocações dependem de validação |
 | webhook_events | workspace_id, provider, external_event_id, payload_ref, received_at, state | Único por provedor/evento; conexão resolvida no servidor, nunca confiando no workspace do payload |
 | documents | workspace_id, storage_key, mime_type, size_bytes, checksum, purpose, status | Metadados de objeto privado; checksum não autoriza acesso |
 | outbox_events | workspace_id, type, entity_id, payload_ref, published_at | Gravado na transação de negócio; publicação repetível |
 | jobs | workspace_id, type, deduplication_key, payload_ref, state, attempts, available_at, lease_until, last_error_code | Registro operacional proposto, sem substituir pgmq como fila; único por workspace/tipo/chave; consumidor restrito; representação e coordenação das reservas a detalhar |
+
+**PROPOSTA TÉCNICA — complementos do modelo lógico:**
+
+| Conceito | Dados e vínculos propostos | Limite |
+|---|---|---|
+| Modelo de importação CSV | Workspace, nome, versão, colunas, separadores, formato de data e convenção de valores | Reutilizável somente no escopo autorizado; alteração não reinterpreta lotes já confirmados |
+| Confirmação de importação | Lote, usuário, conta, versão da prévia, itens selecionados, decisões de conciliação e instante | Evidência do conjunto autorizado; não autoriza itens futuros ou alterados |
+| Referência externa | Entidade interna, namespace, instituição/provedor, conexão quando aplicável, conta de origem e identificador externo | ID externo não substitui ID interno; unicidade depende do escopo documentado |
+| Execução de item | Lote/observação, operação, chave idempotente, estado e referência do resultado | Efeito financeiro e evidência de sucesso coordenados na mesma transação |
+| Saldo observado | Conta, origem, valor decimal, moeda, tipo e data de referência | Evidência de conciliação; não sobrescreve o saldo do ledger |
+
+A localização física desses dados, nomes finais, cardinalidades, índices e restrições ainda serão definidos. A aprovação de D06 não exige criar todas essas entidades como tabelas separadas.
 
 **Consequências aprovadas de D05.2:** reentregas após falhas ou expiração de reservas não podem duplicar importações, lançamentos ou deltas de saldo. O worker revalida permissões atuais nas tarefas delegadas e o escopo dos recursos; mensagens contêm somente referências e dados mínimos necessários. Ledger, saldos e auditoria financeira são atualizados atomicamente pelas funções transacionais PostgreSQL; confirmar processamento somente respeitando a persistência dos efeitos e os controles idempotentes. Enfileiramento não autoriza alterações da IA.
 
@@ -134,7 +154,15 @@ Saldos de ativos usam débitos menos créditos; passivos usam créditos menos d�
 
 Evento recebido sem conexão reconhecida é rejeitado ou colocado em quarentena operacional inacessível aos clientes, sem atribuição arbitrária de workspace. A persistência dessa quarentena é decisão de infraestrutura, não uma tabela de negócio com workspace nulo.
 
-Deduplicar primeiro por identificador estável do provedor e conta de origem. Fingerprints por data/valor/descrição são apenas candidatos: dois pagamentos legítimos podem ser iguais. Importações repetidas e transição de pendente para confirmado exigem reconciliação, não inserção cega. Para dados sem ID estável, a aprovação humana resolve ambiguidades. A ligação com lançamento manual preserva o lançamento existente.
+**DECISÃO APROVADA — D06:** identificar duplicidades, encaminhar ambiguidades para revisão e recuperar falhas sem repetir lançamentos. A vinculação de uma observação importada a lançamento manual existente preserva o histórico financeiro confirmado.
+
+**PROPOSTA TÉCNICA:** distinguir idempotência da operação e identificação do mesmo fato em fontes diferentes. Checksum do arquivo identifica reenvios no escopo autorizado; referências estáveis de instituição/conta identificam observações repetidas entre arquivos ou sincronizações. Fingerprints de data/valor/descrição geram candidatos, não unicidade absoluta: pagamentos legítimos podem ser iguais. IDs de fornecedores diferentes não são presumidos equivalentes.
+
+Revalidar duplicidades na transação, inclusive com importações concorrentes. Mesmo identificador com conteúdo conflitante exige revisão; transições externas de pendente para efetivado e mudanças de identificador exigem conciliação. Alteração ou exclusão na origem não apaga lançamento confirmado. Sem identificador confiável, não prometer deduplicação automática perfeita.
+
+Retomar somente operações sem efeito confirmado. Uma falha após commit e antes da confirmação da tarefa deve recuperar o resultado existente. Cancelar o restante de um lote não desfaz operações concluídas; correção exige estorno e novo lançamento. Registros inválidos e ambiguidades não resolvidas não alteram saldos.
+
+**PENDÊNCIA DE DECISÃO:** esquema final, política de retenção do bruto e das evidências, critérios de associação automática, detalhes de contrapartidas, homologação dos formatos e parâmetros operacionais de D05.2. O descarte do arquivo original deve preservar a rastreabilidade permitida pela política aprovada, sem implicar retenção ilimitada de dados pessoais.
 
 ## 6. IA, autorização e auditoria
 
