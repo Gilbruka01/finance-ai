@@ -14,7 +14,7 @@ Data: 23/11/2026. Estado: modelo lógico proposto; não contém migrations execu
 
 **DECISÃO APROVADA — D06:** importação OFX/CSV e cadastro manual no lançamento, com prévia, seleção, confirmação e rastreabilidade; processamento parcial recuperável de lotes, atomicidade por operação financeira e idempotência persistente. Integração bancária futura usa contrato normalizado/versionado, IDs internos estáveis e referências externas separadas. Essas decisões não aprovam automaticamente tabelas, campos ou índices.
 
-**PROPOSTA TÉCNICA:** tabelas, campos, tipos, cardinalidades, índices e detalhes físicos abaixo continuam propostas até a fase de implementação. A escolha de funções transacionais está aprovada, mas seus contratos, assinaturas e mecanismos de concorrência não estão definidos. As decisões orientam o modelo sem aprovar seu desenho físico completo. **PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, demais detalhes não decididos da D05, detalhamentos pendentes da D06 e condições comerciais pendentes da D07 e D08–D12 e demais pontos do [registro de arquitetura](architecture.md#8-registro-de-decisões).
+**PROPOSTA TÉCNICA:** tabelas, campos, tipos, cardinalidades, índices e detalhes físicos abaixo continuam propostas até a fase de implementação. A escolha de funções transacionais está aprovada, mas seus contratos, assinaturas e mecanismos de concorrência não estão definidos. As decisões orientam o modelo sem aprovar seu desenho físico completo. **PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, demais detalhes não decididos da D05, detalhamentos pendentes da D06 e condições comerciais da D07, parâmetros da D08 e decisões D09–D12 e demais pontos do [registro de arquitetura](architecture.md#8-registro-de-decisões).
 
 Convenções propostas:
 
@@ -169,6 +169,8 @@ Retomar somente operações sem efeito confirmado. Uma falha após commit e ante
 **PENDÊNCIA DE DECISÃO:** esquema final, política de retenção do bruto e das evidências, critérios de associação automática, detalhes de contrapartidas, homologação dos formatos e parâmetros operacionais de D05.2. O descarte do arquivo original deve preservar a rastreabilidade permitida pela política aprovada, sem implicar retenção ilimitada de dados pessoais.
 
 ## 6. IA, autorização e auditoria
+
+**DECISÃO APROVADA — D08:** memória persistente sob controle do autor e privada a ele dentro do workspace. As consultas financeiras são estruturadas, sem banco vetorial inicialmente. Reservar consumo atomicamente e reconciliar o uso por usuário e workspace com o orçamento global. Preservar evidência da proposta imutável, da autorização e do resultado idempotente. Auditar operações, consumo, modelo e versão do prompt com dados mínimos. As entidades abaixo são propostas de persistência. Retenção, valores e mecanismos de controle da memória continuam a detalhar.
 
 | Entidade | Campos principais | Relações e invariantes |
 |---|---|---|

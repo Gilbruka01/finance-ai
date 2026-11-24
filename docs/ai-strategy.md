@@ -8,20 +8,41 @@ Data: 23/11/2026. Estado: proposta técnica; sem integração ou execução de m
 
 **DECISÃO APROVADA — D01–D03:** IA apoia gestão pessoal, familiar e empresarial, investimentos, planejamento, relatórios e projeções. Acessa somente dados do workspace e das áreas autorizadas; alterações exigem autorização explícita. O núcleo confirma automaticamente lançamentos válidos após validações, mas não autoriza ações da IA por esse motivo. Partidas dobradas, estorno e novo lançamento, saldos armazenados atômicos/conciliáveis e vedação de transferência direta entre workspaces se aplicam também às ferramentas da IA.
 
-**PROPOSTA TÉCNICA:** orquestração, ferramentas, fluxo de confirmação e avaliações abaixo. **PENDÊNCIA DE DECISÃO:** modelos, custo, retenção, recursos de lançamento e limiares de aceite (D08), além das bases legais e contratos (D09). A autorização para documentar não autoriza acesso a contas bancárias, envio de dados reais ou alterações financeiras.
+**DECISÕES APROVADAS — D08**
+
+| ID | Decisão |
+|---|---|
+| D08.1 | Conversação financeira, análise de receitas e despesas, planejamento, projeções, categorização inteligente, criação de registros autorizados e análise de investimentos integram o lançamento. Conciliação assistida por IA, detecção avançada de anomalias, leitura de fotos/comprovantes e voz ficam para evolução posterior. |
+| D08.2 | Selecionar modelos dinamicamente conforme complexidade, custo e qualidade, usando a Responses API por adaptador no servidor. |
+| D08.3 | Aplicar quotas por usuário e workspace, orçamento global, reserva atômica de consumo, reconciliação do consumo real, limites de contexto e interrupção automática por orçamento. |
+| D08.4 | Manter memória persistente, privada ao autor, controlável por ele e isolada por workspace. Usar consultas financeiras estruturadas, sem banco vetorial inicialmente. |
+| D08.5 | Vincular a autorização explícita à proposta imutável e revalidar permissões, validade, hash e versões antes da execução. |
+| D08.6 | Restringir ferramentas e validar suas chamadas no servidor. O modelo não tem acesso direto a SQL ou credenciais. |
+| D08.7 | Fundamentar respostas em cálculos determinísticos e referências verificáveis, indicando período, moeda e atualização. |
+| D08.8 | Proteger contra prompt injection, vazamentos e manipulação de ferramentas. |
+| D08.9 | Minimizar os dados enviados ao fornecedor. Não usar dados de clientes para fine-tuning inicialmente. |
+| D08.10 | Combinar testes automatizados e avaliações humanas. |
+| D08.11 | Falhas de isolamento ou alterações não autorizadas bloqueiam o lançamento. |
+| D08.12 | Auditar operações, consumo, modelos e versões de prompts. |
+| D08.13 | Manter o núcleo financeiro disponível independentemente da IA. |
+| D08.14 | Condicionar mudanças de modelos e prompts a testes de regressão. |
+
+**PENDÊNCIA DE DECISÃO:** Modelos específicos, tarifas, orçamento numérico, quotas numéricas, retenção, métodos de projeção, limiares de qualidade e parâmetros operacionais permanecem pendentes.
+
+**PROPOSTA TÉCNICA:** os contratos de ferramentas, estados de execução e mecanismos de controle abaixo detalham essas decisões. Esta documentação não autoriza execução de modelos ou envio de dados reais.
 
 Referências internas: [arquitetura](architecture.md), [modelo de dados](database.md), [segurança](security.md) e [roadmap](product-roadmap.md).
 
 ## 2. Capacidades e evolução
 
-| Capacidade | Proposta | Fonte e limite |
+| Capacidade e etapa | Aplicação proposta | Fonte e limite |
 |---|---|---|
 | Perguntas financeiras | Consultar saldo, despesas e evolução | Ferramentas determinísticas com período e workspace explícitos |
 | Explicações | Explicar variações e composição de categorias | Citar lançamentos/agregados e informar cobertura dos dados |
 | Categorização | Sugerir categoria e motivo | Sugestão não modifica lançamento por si só |
-| Conciliação assistida | Sugerir correspondências | Ambiguidades requerem revisão; sem apagar duplicatas por inferência |
-| Anomalias | Sinalizar padrões atípicos | Alertas não são constatação de fraude |
-| Documentos | Extrair campos de comprovantes/faturas | Dados não confiáveis; alteração financeira pela IA exige autorização explícita antes da confirmação automática válida |
+| Conciliação assistida por IA (posterior) | Sugerir correspondências | Ambiguidades requerem revisão; sem apagar duplicatas por inferência |
+| Detecção avançada de anomalias (posterior) | Sinalizar padrões atípicos | Alertas não são constatação de fraude |
+| Fotos e comprovantes (posterior) | Extrair campos de comprovantes/faturas | Dados não confiáveis; alteração financeira pela IA exige autorização explícita antes da confirmação automática válida |
 | Investimentos | Explicar posição e resultados calculados | Dados autorizados, data/fonte e distinção entre saldo e valorização; sem ordens |
 | Projeções | Explicar cenários calculados | Parte do escopo D01; métodos e cobertura ainda pendentes, com premissas explícitas e avaliação |
 
@@ -45,7 +66,7 @@ Mensagens devem conter identificadores e dados mínimos; credenciais privilegiad
 
 **PROPOSTA TÉCNICA — aplicação de D04:** pacotes permanecem no monorepositório pnpm; o adaptador Supabase usa o SDK sem ORM inicial. Depois de autorização explícita e validações, a aplicação invoca uma função transacional PostgreSQL para efetivar a operação financeira crítica. O modelo não escolhe RPCs arbitrárias, não fornece SQL e não recebe o cliente Supabase. Contratos de ferramentas continuam separados dos contratos de persistência; grants, RLS e verificações de workspace/área permanecem obrigatórios.
 
-**PROPOSTA TÉCNICA:** usar Responses API através de adaptador no servidor, com seleção de modelo por capacidade, custo e qualidade. Versão e modelo exatos serão avaliados antes da implementação, sem fixação especulativa neste plano.
+**DECISÃO APROVADA — D08.2:** usar Responses API através de adaptador no servidor, com seleção de modelo por capacidade, custo e qualidade. Versão e modelo exatos serão avaliados antes da implementação, sem fixação especulativa neste plano.
 
 Fluxo: usuário autenticado → autorização do workspace → classificação do pedido → ferramentas permitidas → consulta/cálculo em finance-core → resultados mínimos ao modelo → resposta estruturada validada → apresentação com fontes ou proposta de ação.
 
@@ -80,7 +101,7 @@ Respostas financeiras devem informar período, moeda, data de atualização e re
 
 Conversas pertencem a um workspace e inicialmente são privadas ao autor. Ao mudar de espaço, abrir ou recuperar conversa desse espaço sem carregar histórico do anterior. Cache e resultados temporários devem considerar workspace, usuário/permissões, versão dos dados e política de expiração.
 
-**PROPOSTA TÉCNICA:** não usar banco vetorial no início para responder cálculos. Consulta estruturada atende valores e períodos. Busca semântica em documentos pode ser adicionada quando houver necessidade comprovada; se adotada, filtros de workspace, autoria e finalidade precisam ser aplicados antes e depois da recuperação, inclusive em embeddings e citações.
+**DECISÃO APROVADA — D08.4:** não usar banco vetorial no início para responder cálculos. Consulta estruturada atende valores e períodos. Busca semântica em documentos pode ser adicionada quando houver necessidade comprovada; se adotada, filtros de workspace, autoria e finalidade precisam ser aplicados antes e depois da recuperação, inclusive em embeddings e citações.
 
 ## 6. Autorização de alterações
 
@@ -116,7 +137,7 @@ Enviar apenas os campos necessários: agregados quando suficientes, identificado
 
 Antes da produção, verificar retenção por endpoint, logs de abuso, estado persistido, arquivos enviados, elegibilidade de controles adicionais, região e contratos. Não prometer retenção zero; desabilitar armazenamento de estado quando suportado e adequado não elimina automaticamente todas as retenções do fornecedor. A política deve abranger também histórico local, documentos e backups. Fonte: [controles de dados da OpenAI](https://developers.openai.com/api/docs/guides/your-data).
 
-A seleção do modelo deve considerar tratamento de dados além de desempenho. Fine-tuning com dados de clientes não faz parte da proposta inicial. Base legal e transparência do uso de IA devem ser avaliadas separadamente do consentimento bancário, conforme [security.md](security.md).
+A seleção do modelo deve considerar tratamento de dados além de desempenho. Fine-tuning com dados de clientes está excluído da estratégia inicial aprovada (D08.9). Base legal e transparência do uso de IA devem ser avaliadas separadamente do consentimento bancário, conforme [security.md](security.md).
 
 ## 9. Avaliação, custo e operação
 
@@ -141,6 +162,6 @@ Quotas por usuário/workspace, orçamento global, limites de contexto e circuit 
 
 Se o provedor falhar ou o orçamento acabar, manter lançamentos e relatórios determinísticos disponíveis e informar indisponibilidade da IA. Não fabricar resposta financeira para disfarçar timeout. Tarefas longas seguem a estratégia de jobs da arquitetura, respeitando limites do executor escolhido.
 
-**PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, conforme lista completa em [architecture.md, seção 6](architecture.md#6-assíncrono-falhas-e-escalabilidade): agendamentos/fuso/execuções perdidas, tentativas/backoff, reservas/renovação, concorrência, dimensionamento/instâncias/capacidade, planos/orçamento, metas, retenção de logs/histórico, alertas/responsáveis e organização do worker. Backups, restauração e retomada após desastres seguem pendentes em D10. As decisões arquiteturais da D06 estão aprovadas, com detalhamentos ainda pendentes; condições comerciais pendentes da D07 e D08–D12 permanecem pendentes, incluindo modelos, custos e retenção de IA em D08/D09. A aprovação arquitetural não autoriza execução de modelos, configuração ou contratação.
+**PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, conforme lista completa em [architecture.md, seção 6](architecture.md#6-assíncrono-falhas-e-escalabilidade): agendamentos/fuso/execuções perdidas, tentativas/backoff, reservas/renovação, concorrência, dimensionamento/instâncias/capacidade, planos/orçamento, metas, retenção de logs/histórico, alertas/responsáveis e organização do worker. Backups, restauração e retomada após desastres seguem pendentes em D10. As decisões arquiteturais da D06 estão aprovadas, com detalhamentos ainda pendentes; condições comerciais da D07, parâmetros da D08 e decisões D09–D12 permanecem pendentes, incluindo modelos, custos e retenção de IA em D08/D09. A aprovação arquitetural não autoriza execução de modelos, configuração ou contratação.
 
 Fontes oficiais consultadas em 23/11/2026; validar APIs, contratos, modelos e preços antes da implementação.

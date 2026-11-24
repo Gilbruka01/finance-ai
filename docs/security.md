@@ -8,7 +8,7 @@ Data: 23/11/2026. Estado: planejamento de controles, sem configuração de servi
 
 **DECISÃO APROVADA — D01–D03:** gestão pessoal, familiar e empresarial, incluindo investimentos/projeções sem executar ordens ou pagamentos; três tipos de workspace; permissões individuais e por área empresarial; cópia independente pessoal/familiar; revogação imediata; partidas dobradas, estorno e novo lançamento, confirmação automática válida e saldos armazenados com integridade.
 
-**PROPOSTA TÉCNICA:** mecanismos de proteção deste documento materializam os requisitos aprovados, mas ainda não foram implementados ou aprovados em detalhe. **PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, demais detalhes não decididos da D05 e detalhamentos pendentes da D06 e condições comerciais pendentes da D07 e D08–D12 do [registro de decisões](architecture.md#8-registro-de-decisões). D05.1 e a arquitetura principal da D05.2 estão aprovadas; documentação não equivale a controles implementados nem certificação de conformidade jurídica.
+**PROPOSTA TÉCNICA:** mecanismos de proteção deste documento materializam os requisitos aprovados, mas ainda não foram implementados ou aprovados em detalhe. **PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, demais detalhes não decididos da D05 e detalhamentos pendentes da D06 e condições comerciais da D07, parâmetros da D08 e decisões D09–D12 do [registro de decisões](architecture.md#8-registro-de-decisões). D05.1 e a arquitetura principal da D05.2 estão aprovadas; documentação não equivale a controles implementados nem certificação de conformidade jurídica.
 
 **DECISÃO APROVADA — D06:** importação OFX/CSV e cadastro manual no lançamento, com permissões específicas, arquivos privados, validação segura, processamento determinístico, confirmação do conjunto selecionado, auditoria e retenção limitada dos originais. Prazo de retenção, limites numéricos e mecanismos concretos permanecem pendentes. Open Finance automático será avaliado posteriormente.
 
@@ -144,6 +144,8 @@ Logs operacionais sem payloads financeiros completos; acesso segregado e rastrea
 Backups, recuperação ponto a ponto quando contratada, teste de restauração e recuperação de Storage/secrets devem formar um plano conjunto. Não presumir que backup do PostgreSQL inclui objetos do Storage. RPO, RTO, região e periodicidade de teste dependem de D10 e do plano contratado.
 
 Resposta a incidente: detectar e classificar → conter acesso/integração → preservar evidências mínimas → avaliar impacto → recuperar e validar → cumprir comunicações aplicáveis com responsáveis jurídicos → corrigir causas. Não fixar prazos legais sem validar a regra vigente no momento.
+
+**DECISÃO APROVADA — D08:** tratar conteúdo financeiro externo como dados e proteger a memória privada do autor por workspace. Prevenir prompt injection, vazamentos e manipulação das ferramentas por validação no servidor, com escopo e privilégios restritos e sem acesso direto do modelo a SQL ou credenciais. Revalidar permissões, validade, hash e versões da proposta imutável antes de executar a ação explicitamente autorizada. Minimizar dados enviados ao fornecedor e excluir inicialmente fine-tuning com dados de clientes. Falhas de isolamento ou alterações não autorizadas bloqueiam o lançamento.
 
 ## 9. Critérios de aceite de segurança
 
