@@ -8,7 +8,7 @@ Data: 23/11/2026. Estado: planejamento de controles, sem configuração de servi
 
 **DECISÃO APROVADA — D01–D03:** gestão pessoal, familiar e empresarial, incluindo investimentos/projeções sem executar ordens ou pagamentos; três tipos de workspace; permissões individuais e por área empresarial; cópia independente pessoal/familiar; revogação imediata; partidas dobradas, estorno e novo lançamento, confirmação automática válida e saldos armazenados com integridade.
 
-**PROPOSTA TÉCNICA:** mecanismos de proteção deste documento materializam os requisitos aprovados, mas ainda não foram implementados ou aprovados em detalhe. **PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, demais detalhes não decididos da D05 e detalhamentos pendentes da D06 e condições comerciais da D07, parâmetros da D08 e decisões D09–D12 do [registro de decisões](architecture.md#8-registro-de-decisões). D05.1 e a arquitetura principal da D05.2 estão aprovadas; documentação não equivale a controles implementados nem certificação de conformidade jurídica.
+**PROPOSTA TÉCNICA:** mecanismos de proteção deste documento materializam os requisitos aprovados, mas ainda não foram implementados ou aprovados em detalhe. **PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, demais detalhes não decididos da D05 e detalhamentos pendentes da D06 e condições comerciais da D07, parâmetros da D08, detalhamentos da D09 e decisões D10–D12 do [registro de decisões](architecture.md#8-registro-de-decisões). D05.1 e a arquitetura principal da D05.2 estão aprovadas; documentação não equivale a controles implementados nem certificação de conformidade jurídica.
 
 **DECISÃO APROVADA — D06:** importação OFX/CSV e cadastro manual no lançamento, com permissões específicas, arquivos privados, validação segura, processamento determinístico, confirmação do conjunto selecionado, auditoria e retenção limitada dos originais. Prazo de retenção, limites numéricos e mecanismos concretos permanecem pendentes. Open Finance automático será avaliado posteriormente.
 
@@ -112,7 +112,7 @@ Webhooks: verificar autenticidade conforme protocolo do fornecedor, assinatura s
 
 ## 7. Privacidade e LGPD
 
-**DECISÃO APROVADA:** considerar LGPD. **PROPOSTA TÉCNICA:** inventário de tratamentos e revisão jurídica antes da produção. A [LGPD, texto compilado](https://planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709compilado.htm), é a referência para princípios, bases legais, direitos e segurança. Base legal deve ser definida por finalidade; consentimento de Open Finance não autoriza automaticamente todo tratamento posterior ou envio a um fornecedor de IA.
+**DECISÃO APROVADA:** manter inventário de tratamentos e realizar a revisão prevista em D09.14. A [LGPD, texto compilado](https://planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709compilado.htm), é a referência para princípios, bases legais, direitos e segurança. Base legal deve ser definida por finalidade; consentimento de Open Finance não autoriza automaticamente todo tratamento posterior ou envio a um fornecedor de IA.
 
 | Grupo | Finalidade proposta | Tratamento a definir |
 |---|---|---|
@@ -123,7 +123,29 @@ Webhooks: verificar autenticidade conforme protocolo do fornecedor, assinatura s
 | Auditoria e segurança | Integridade e investigação | Retenção justificada, acesso restrito e redução de identificadores |
 | Cobrança | Administrar assinatura | Responsabilidades com provedor e retenção obrigatória aplicável |
 
-PENDÊNCIA DE DECISÃO D09: definir controlador/operador por tratamento, contratos, subprocessadores, mecanismo de transferência internacional quando aplicável, canal de direitos, política de retenção, público etário e necessidade de relatório de impacto. Dados financeiros exigem proteção forte; não classificar automaticamente todo dado financeiro como dado pessoal sensível no sentido legal.
+**DECISÕES APROVADAS — D09**
+
+| ID | Requisito |
+|---|---|
+| D09.1 | Identificar em cada tratamento quem atua como controlador e quem atua como operador, conforme suas responsabilidades. |
+| D09.2 | Manter inventário de tratamentos e vincular cada finalidade à respectiva base legal, sujeita a validação definitiva. |
+| D09.3 | No lançamento, todos os usuários devem ter 18 anos completos ou mais, inclusive convidados de workspaces familiares. A educação financeira supervisionada para menores depende de validações jurídicas e técnicas e da revisão de D02 e D08. |
+| D09.4 | Disponibilizar mecanismos para receber, verificar, atender e acompanhar solicitações de exercício dos direitos dos titulares. |
+| D09.5 | Definir retenção e exclusão por categoria de dados. Os prazos serão definidos posteriormente. |
+| D09.6 | Submeter fornecedores e transferências internacionais à validação jurídica, contratual e de segurança. |
+| D09.7 | No contexto de investimentos, o FINANCE AI oferecerá análise, acompanhamento, planejamento e simulação de caráter informativo, sem prestar consultoria regulamentada, recomendar individualmente a compra, venda ou alocação de valores mobiliários, executar ordens ou garantir rentabilidade. Essa restrição não limita as demais funcionalidades aprovadas em D01–D08, incluindo gestão financeira, importação de extratos, conciliação, categorização, criação de registros e execução de operações internas pela IA mediante autorização explícita, respeitando o escopo e as permissões estabelecidas. |
+| D09.8 | Versionar a documentação jurídica e as políticas antes do lançamento comercial. |
+| D09.9 | Respeitar os direitos do consumidor. O teste gratuito de sete dias previsto na D07 é uma condição comercial distinta do direito de arrependimento aplicável à contratação. |
+| D09.10 | Manter resposta a incidentes. Quando a comunicação for obrigatória, adotar meta interna de até três dias úteis, respeitando os prazos legais aplicáveis, inclusive prazo menor. |
+| D09.11 | Disponibilizar canal de privacidade, identificar o responsável pelo tratamento e designar encarregado quando exigido. |
+| D09.12 | Proibir a comercialização de dados financeiros e a publicidade baseada nesses dados. No lançamento, proibir o treinamento de modelos com dados dos clientes. |
+| D09.13 | Usar dados sintéticos no desenvolvimento e nos testes. Avaliar impactos dos tratamentos e elaborar relatório quando necessário. |
+| D09.14 | Concluir revisão jurídica, regulatória, fiscal, contratual e de segurança antes da operação comercial com dados reais. |
+| D09.15 | Assegurar transparência e mecanismos de revisão e contestação das decisões automatizadas, quando aplicáveis. |
+
+**PENDÊNCIAS DA D09:** prazos de retenção por categoria, estrutura jurídica e tributária, validação definitiva das bases legais, contratos e subprocessadores, transferências internacionais e respectivos mecanismos, documentos jurídicos definitivos e requisitos para eventual acesso de menores.
+
+Dados financeiros exigem proteção forte; não classificar automaticamente todo dado financeiro como dado pessoal sensível no sentido legal.
 
 Exportação e exclusão precisam verificar identidade e escopo. Excluir conta de um membro não apaga automaticamente registros legítimos de uma empresa. Desvincular identidade, anonimizar ou reter registros depende da finalidade e obrigação aplicável. Backups têm ciclo de expiração e procedimento para reaplicar exclusões após restauração. Revogar Open Finance interrompe coleta; não substitui pedido de exclusão nem dispensa avaliar retenção.
 
