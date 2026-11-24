@@ -16,14 +16,14 @@ Data: 23/11/2026. Estado: modelo lógico proposto; não contém migrations execu
 
 **DECISÃO APROVADA — D09:** o ciclo de retenção e exclusão é definido por categoria. **PROPOSTA TÉCNICA:** associar cada categoria do modelo ao inventário de finalidades, papéis e bases legais. Registrar a versão da política e o atendimento de pedidos de titulares com evidência mínima e acesso restrito. Avaliar separadamente identificadores pessoais, arquivos importados, ledger, conversas, auditoria e backups. A exclusão deve conciliar direitos, obrigações de guarda e integridade do ledger, preservando o isolamento por workspace. Os prazos e as bases legais definitivas permanecem pendentes.
 
-**PROPOSTA TÉCNICA:** tabelas, campos, tipos, cardinalidades, índices e detalhes físicos abaixo continuam propostas até a fase de implementação. A escolha de funções transacionais está aprovada, mas seus contratos, assinaturas e mecanismos de concorrência não estão definidos. As decisões orientam o modelo sem aprovar seu desenho físico completo. **PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, demais detalhes não decididos da D05, detalhamentos pendentes da D06 e condições comerciais da D07, parâmetros da D08, detalhamentos da D09 e da D10 e decisões D11–D12 e demais pontos do [registro de arquitetura](architecture.md#8-registro-de-decisões).
+**PROPOSTA TÉCNICA:** tabelas, campos, tipos, cardinalidades, índices e detalhes físicos abaixo continuam propostas até a fase de implementação. A escolha de funções transacionais está aprovada, mas seus contratos, assinaturas e mecanismos de concorrência não estão definidos. As decisões orientam o modelo sem aprovar seu desenho físico completo. **PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, demais detalhes não decididos da D05, detalhamentos pendentes da D06 e condições comerciais da D07, parâmetros da D08, detalhamentos de D09–D11 e a decisão D12 e demais pontos do [registro de arquitetura](architecture.md#8-registro-de-decisões).
 
 Convenções propostas:
 
 - PK `id` em UUID, salvo vínculo de perfil com identidade Supabase.
 - Tabelas de negócio têm `workspace_id` obrigatório, `created_at` e, quando mutáveis, `updated_at` e `version` para concorrência otimista.
 - Instantes em `timestamptz`, armazenados em UTC; competência, vencimento e data financeira em `date`. Fuso IANA do workspace é explícito; sugestão inicial America/Sao_Paulo, editável, sem presumir um único fuso para todo o Brasil.
-- Valores em `numeric(20,2)` para BRL e taxas em precisão decimal maior definida pelo caso de uso. Transporte de decimais como string; não calcular dinheiro com ponto flutuante binário de JavaScript.
+- **D11.1/D11.2 aprovadas:** BRL com duas casas, intermediários decimais de maior precisão e arredondamento Half Up (empates para longe de zero). **Proposta técnica:** transportar decimais como strings. Precisão e tipos físicos permanecem em aberto.
 - Moeda explícita, inicialmente restrita a BRL. Suporte futuro a câmbio exige decisão e novo modelo; uma coluna de moeda não implementa multimoeda.
 - FKs com escopo: toda referência entre entidades de negócio usa `(workspace_id, entidade_id)` para uma chave única correspondente. Isso impede referências entre workspaces mesmo quando IDs são conhecidos.
 - Exclusão de pai financeiro referenciado é restrita; arquivamento não deve ocultar valores de relatórios históricos. Exclusão/anônimização por privacidade segue política específica, não um soft delete universal.
@@ -79,7 +79,7 @@ Convenções propostas:
 | transaction_entries | workspace_id, transaction_id, ledger_account_id, side, amount, category_id opcional, cost_center_id opcional | Valor positivo; lado debit/credit; soma de débitos igual a créditos por lançamento |
 | cost_centers | workspace_id, name, status | Somente workspace empresarial; centro arquivado continua consultável no histórico |
 | counterparties | workspace_id, name, kind, tax_id opcional protegido | Cliente/fornecedor/outro; dados mínimos necessários |
-| obligations | workspace_id, kind payable/receivable, counterparty_id, amount, due_on, competence_on, recurrence_rule_id opcional | Compromisso previsto; não altera saldo bancário por si só |
+| obligations | workspace_id, kind payable/receivable, counterparty_id, amount, due_on, competence_on, recurrence_rule_id opcional | Distinguir previsão de obrigação reconhecida, vincular ao lançamento de reconhecimento quando constituída e apurar o restante pelas liquidações e ajustes |
 | obligation_settlements | workspace_id, obligation_id, transaction_id, amount | N:M entre obrigações e lançamentos; suporta liquidação parcial; total não excede obrigação sem regra explícita |
 | recurrence_rules | workspace_id, template, frequency, next_due_on, ends_on, status | Gera compromissos ou rascunhos; único por regra/ocorrência para evitar duplicação |
 | budgets | workspace_id, category_id, period_start, period_end, limit_amount | Valores não negativos; política de sobreposição definida antes de implementar |
@@ -96,9 +96,9 @@ Convenções propostas:
 
 **DECISÃO APROVADA:** lançamentos confirmados não são editados nem apagados pela operação normal; correção ocorre por estorno e novo lançamento, preservando autoria, justificativa e histórico. **PROPOSTA TÉCNICA:** inverso ligado por `reversal_of_id` e novo registro ligado por `replaces_transaction_id`; proteger contra estorno duplicado. Original, inverso e novo lançamento permanecem rastreáveis; cada efeito confirmado atualiza o saldo uma única vez. Executar a correção como unidade transacional. Saldo inicial é lançamento explícito contra conta de abertura.
 
-Exemplos conceituais: recebimento debita banco e credita receita; pagamento debita despesa e credita banco; transferência debita conta de destino e credita conta de origem dentro do mesmo workspace. **DECISÃO APROVADA:** transferência interna não gera receita/despesa; não existe transferência direta entre workspaces. A cópia pessoal/familiar é uma operação distinta de compartilhamento de registros, sem transferência financeira nem vínculo sincronizado.
+Exemplos conceituais: na liquidação de direito já reconhecido, debitar banco e creditar contas a receber. Ao pagar obrigação reconhecida, debitar o passivo e creditar banco. Discriminar juros, multas, descontos e antecipações para reconciliar o principal, o valor liquidado e o saldo em aberto. Na transferência interna, debitar a conta de destino e creditar a de origem no mesmo workspace. Tarifas geram despesa separada. Não existe transferência direta entre workspaces. A cópia pessoal/familiar permanece independente, sem transferência financeira ou sincronização.
 
-Saldos de ativos usam débitos menos créditos; passivos usam créditos menos débitos. Relatórios distinguem fluxo de caixa e competência e não somam transferências internas como receita/despesa. Regras finais de reconhecimento, arredondamento, parcelas, fechamento e ajustes dependem de D11.
+Saldos de ativos usam débitos menos créditos e passivos usam créditos menos débitos. **D11.3/D11.4/D11.18 aprovadas:** separar ocorrência, competência, vencimento e liquidação dos instantes técnicos de registro e confirmação em UTC. Usar o fuso configurado do workspace. O relatório de caixa acompanha recebimentos e pagamentos efetivos e o de competência considera o reconhecimento. Ambos derivam dos mesmos eventos rastreáveis e identificam período, regime, moeda, metodologia e atualização.
 
 ### Conciliação e reconstrução dos saldos
 
@@ -114,11 +114,11 @@ Saldos de ativos usam débitos menos créditos; passivos usam créditos menos d�
 |---|---|---|
 | credit_cards | workspace_id, liability_account_id, name, last_four, closing_day, due_day, limit_amount | Vinculado a passivo; sem PAN completo ou CVV |
 | card_invoices | workspace_id, credit_card_id, reference_period, closes_on, due_on, status | 1:N cartão/faturas; período único por cartão |
-| card_purchases | workspace_id, credit_card_id, purchased_on, total_amount, installment_count | Uma compra possui uma ou mais parcelas |
-| card_installments | workspace_id, purchase_id, invoice_id, installment_number, amount, transaction_id opcional | Número único por compra; soma das parcelas igual ao total; parcela postada tem lançamento associado |
+| card_purchases | workspace_id, credit_card_id, purchased_on, total_amount, installment_count, recognition_transaction_id | Uma compra vincula o reconhecimento integral ao cronograma de parcelas |
+| card_installments | workspace_id, purchase_id, invoice_id, installment_number, due_on, amount | Número único por compra. A soma das parcelas corresponde ao valor parcelado. A atribuição à fatura não gera novo reconhecimento da aquisição |
 | card_invoice_payments | workspace_id, invoice_id, transaction_id, amount | Liquidação parcial ou total; não criar nova despesa ao pagar passivo |
 
-**PROPOSTA TÉCNICA:** cada parcela reconhecida debita despesa e credita o passivo do cartão; pagamento debita passivo e credita banco. Compra é metadado e compromisso total; não gerar simultaneamente despesa integral e despesas das parcelas. Distribuição de centavos usa regra determinística, com ajuste residual definido em D11. Conciliação deve reconhecer a mesma compra nos dados do cartão e o pagamento no extrato bancário sem duplicar despesas.
+**DECISÃO APROVADA — D11.6–D11.8:** o reconhecimento integral substitui a proposta anterior de reconhecimento por parcela. Quando constituídas a aquisição e a obrigação, debitar integralmente despesa ou ativo conforme a natureza da compra e creditar o passivo do cartão. Distribuir o valor no cronograma com ajuste residual na última parcela, respeitando o cronograma real comprovado. Ao liquidar a fatura, inclusive parcialmente, debitar o passivo e creditar banco pelo valor pago. Vincular compra, fatura e pagamento na conciliação para evitar dupla contagem. Estruturas físicas e fórmulas detalhadas continuam propostas.
 
 ## 5. Open Finance, importações e processamento
 

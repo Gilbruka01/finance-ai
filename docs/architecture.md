@@ -122,7 +122,30 @@ O fluxo de importação deve oferecer upload privado e validado, processamento d
 
 **DECISÃO APROVADA — integridade:** lotes têm processamento parcial recuperável, com atomicidade por operação financeira e idempotência persistente. Ledger, saldos e auditoria financeira são atualizados na mesma transação. Falhas e reprocessamentos não duplicam lançamentos; o lote inteiro não precisa constituir uma transação financeira indivisível. Correções de confirmados ocorrem exclusivamente por estorno e novo lançamento.
 
-Transferências internas ao workspace não são receitas/despesas; pagamentos de faturas não duplicam despesas das compras. Saldos iniciais devem ser identificáveis e balanceados, sem classificação automática como receita. Ambiguidades não produzem classificação financeira definitiva sem resolução autorizada.
+**DECISÕES APROVADAS — D11: políticas financeiras**
+
+| ID | Política |
+|---|---|
+| D11.1 | Usar decimais com duas casas para valores monetários em BRL e precisão ampliada nos cálculos intermediários. Excluir ponto flutuante binário para dinheiro. |
+| D11.2 | Arredondar por Half Up, com empates para longe de zero. |
+| D11.3 | Distinguir ocorrência, competência, vencimento, liquidação, registro e confirmação. Instantes técnicos usam UTC e cada workspace tem fuso configurável. |
+| D11.4 | Oferecer caixa e competência sobre os mesmos lançamentos. Usar caixa por padrão no pessoal e familiar, e competência no empresarial. |
+| D11.5 | Em contas a pagar e receber, distinguir previsão, reconhecimento e liquidação. Suportar liquidações parciais, antecipações, juros, multas e descontos. |
+| D11.6 | Calcular parcelas deterministicamente e ajustar o resíduo na última. Prevalece o cronograma real comprovado. |
+| D11.7 | Quando constituídas a aquisição e a obrigação, reconhecer integralmente ambas. Classificar a aquisição como despesa ou ativo conforme sua natureza. As parcelas representam o cronograma de pagamento. |
+| D11.8 | Tratar cartões como passivos. Controlar limites, compras, parcelas, faturas e pagamentos. A liquidação reduz o passivo sem repetir despesas. |
+| D11.9 | Recorrências geram compromissos ou rascunhos. Uma ocorrência prevista não implica liquidação. |
+| D11.10 | Transferências internas não constituem receita ou despesa. Registrar tarifas separadamente como despesa. |
+| D11.11 | Permitir fechamento mensal opcional. Bloquear alterações retroativas em período fechado e exigir autorização e auditoria para reabri-lo. |
+| D11.12 | Vincular estornos, devoluções e reembolsos aos eventos de origem, preservando os lançamentos originais. |
+| D11.13 | Conciliar movimentações e saldos com divergências e correções rastreáveis, sem ajustes silenciosos. |
+| D11.14 | Orçamentos, metas e reservas virtuais são instrumentos de planejamento sem movimentação de dinheiro. |
+| D11.15 | Registrar saldos iniciais como abertura patrimonial, sem classificação automática como receita. |
+| D11.16 | Distinguir capital investido, aportes, resgates, rendimentos, taxas, tributos e valorização patrimonial. Aplicar os limites de D09.7. |
+| D11.17 | Gerar projeções determinísticas com premissas explícitas, sem garantia de retorno. |
+| D11.18 | Produzir relatórios consistentes e rastreáveis, identificando período, regime, moeda, metodologia e atualização. |
+
+Cada efeito confirmado mantém as partidas dobradas e a atualização atômica do razão, dos saldos e da auditoria pelas funções transacionais de D03/D04. Ambiguidades exigem resolução autorizada.
 
 **DECISÃO APROVADA — integração futura:** camada independente de fornecedor, contrato normalizado e versionado, identificadores internos estáveis e referências externas separadas. Sincronização controlada e recuperável, com gestão de consentimentos e revogações quando aplicável, preservando o histórico financeiro confirmado.
 
@@ -132,7 +155,7 @@ Transferências internas ao workspace não são receitas/despesas; pagamentos de
 
 **DECISÃO APROVADA — limites e falhas:** limites configuráveis de upload, registros, armazenamento, concorrência e processamento; recuperação controlada de falhas transitórias; rejeição de arquivos inválidos sem tentativas infinitas.
 
-**PENDÊNCIA DE DECISÃO:** valores numéricos dos limites, versões OFX e layouts homologados, detalhes do CSV padrão, classificação e contrapartidas, duração das reservas, concorrência, retries, retenção/descarte e procedimentos de recuperação. Permanecem pendentes políticas de sincronização e critérios comerciais e técnicos dos futuros provedores, além das dependências de condições comerciais da D07, parâmetros da D08, detalhamentos da D09 e da D10 e decisões D11–D12.
+**PENDÊNCIA DE DECISÃO:** valores numéricos dos limites, versões OFX e layouts homologados, detalhes do CSV padrão, classificação e contrapartidas, duração das reservas, concorrência, retries, retenção/descarte e procedimentos de recuperação. Permanecem pendentes políticas de sincronização e critérios comerciais e técnicos dos futuros provedores, além das dependências de condições comerciais da D07, parâmetros da D08, detalhamentos de D09–D11 e a decisão D12.
 
 **PROPOSTA TÉCNICA — conexão automática futura:** jornada oficial de consentimento/autenticação → retorno verificado → referências externas e segredos protegidos → sincronização por jobs → normalização → deduplicação/conciliação → registro pelas funções financeiras. Conexões e consentimentos pertencem a um workspace; cobertura PF/PJ será avaliada por fornecedor. Revogação interrompe novas coletas; retenção dos dados existentes depende da política aplicável. Esse fluxo não está implementado nem contratado.
 
@@ -209,7 +232,7 @@ Observar erros, latência, atraso de sincronização, idade dos dados, custo de 
 
 ## 8. Registro de decisões
 
-Os identificadores abaixo são usados nos demais documentos. D01–D04, D05.1, a arquitetura principal da D05.2 e as decisões de D06, D07, D08, D09 e D10 são **DECISÃO APROVADA**. D05 e D06 ainda possuem parâmetros e detalhamentos pendentes. Seus requisitos não aprovam automaticamente estruturas de banco, contratos comerciais ou detalhes de implementação.
+Os identificadores abaixo são usados nos demais documentos. D01–D04, D05.1, a arquitetura principal da D05.2 e as decisões de D06, D07, D08, D09, D10 e D11 são **DECISÃO APROVADA**. D05 e D06 ainda possuem parâmetros e detalhamentos pendentes. Seus requisitos não aprovam automaticamente estruturas de banco, contratos comerciais ou detalhes de implementação.
 
 | ID | Status | Conteúdo aprovado |
 |---|---|---|
@@ -228,7 +251,7 @@ Os identificadores abaixo são usados nos demais documentos. D01–D04, D05.1, a
 
 **DECISÃO APROVADA — D09:** acesso no lançamento a partir de 18 anos completos em todos os workspaces. O acesso futuro de menores para educação financeira supervisionada depende de validações jurídicas e técnicas e da revisão de D02/D08. Em investimentos, análise, acompanhamento, planejamento e simulação têm caráter informativo conforme D09.7. As demais funcionalidades de D01–D08 mantêm seu escopo e suas regras de autorização. Os requisitos por tratamento, fornecedor e etapa comercial constam de [security.md](security.md).
 
-**PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, demais detalhes não decididos da D05 e detalhamentos pendentes da D06 e condições comerciais da D07, parâmetros da D08, detalhamentos da D09 e da D10 e decisões D11–D12 permanecem abertos. As sugestões abaixo são preservadas como **PROPOSTA TÉCNICA**, sem aprovação implícita nem autorização para implementação ou contratação.
+**PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, demais detalhes não decididos da D05 e detalhamentos pendentes da D06 e condições comerciais da D07, parâmetros da D08, detalhamentos de D09–D11 e a decisão D12 permanecem abertos. As sugestões abaixo são preservadas como **PROPOSTA TÉCNICA**, sem aprovação implícita nem autorização para implementação ou contratação.
 
 | ID | Decisão | Proposta ou critério |
 |---|---|---|
@@ -239,7 +262,7 @@ Os identificadores abaixo são usados nos demais documentos. D01–D04, D05.1, a
 | D08 — detalhamento | IA | Modelos específicos, tarifas, orçamento numérico, quotas numéricas, retenção, métodos de projeção, limiares de qualidade e parâmetros operacionais permanecem pendentes. |
 | D09 — detalhamento | Privacidade e requisitos jurídicos | Prazos de retenção, estrutura jurídica e tributária, bases legais definitivas, contratos, transferências internacionais, documentos jurídicos definitivos e requisitos de acesso futuro de menores |
 | D10 — detalhamento | Continuidade | Região definitiva, planos, orçamento, tecnologia de backup, retenção, capacidade, concorrência, retentativas, limiares de alertas e responsáveis específicos |
-| D11 | Políticas financeiras | Arredondamento, datas, fechamento, parcelamento e reconhecimento de despesas |
+| D11 — detalhamento | Políticas financeiras | Precisão física, métodos avançados de rentabilidade, instrumentos, cotações, fórmulas detalhadas, métodos definitivos de projeção e desenho físico do banco |
 | D12 | Metas e calendário | SLOs, desempenho, acessibilidade, capacidade, equipe e datas de entrega |
 
 **PENDÊNCIA DE DECISÃO — detalhamento sem reabrir D01–D03:** cobertura de instrumentos e fontes de investimento; métodos de projeção; catálogo de áreas empresariais; seleção de campos/anexos na cópia familiar e seu tratamento nos relatórios; titularidade de conexões compartilhadas; frequência e procedimento de reparo da conciliação de saldos. Nenhuma dessas lacunas autoriza implementação nesta tarefa.

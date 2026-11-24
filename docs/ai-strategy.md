@@ -82,7 +82,7 @@ Function calling permite solicitar ferramentas; a aplicação valida e decide su
 |---|---|---|
 | Consultar resumo | Período, contas e categorias autorizadas | Totais calculados, moeda, período, referências e data de atualização |
 | Listar movimentações | Filtros validados e paginação limitada | Registros minimizados do workspace ativo |
-| Consultar obrigações | Período e estado | Valores previstos, liquidados e pendentes calculados |
+| Consultar obrigações | Período, regime e estado | Previsão, reconhecimento, liquidações e saldo em aberto discriminados pelo núcleo financeiro |
 | Comparar períodos | Duas janelas válidas | Variações determinísticas e limitações de cobertura |
 | Projetar cenário | Premissas validadas e horizonte limitado | Série calculada, versão do método e premissas |
 | Propor categoria/correção | IDs autorizados e justificativa | Proposta imutável para revisão, sem execução |
@@ -148,6 +148,7 @@ A seleção do modelo deve considerar tratamento de dados além de desempenho. F
 | Dimensão | Evidência proposta |
 |---|---|
 | Exatidão | Totais e percentuais correspondem ao cálculo determinístico, na precisão definida |
+| Relatórios e projeções (D11) | Conferir período, regime, moeda, metodologia, atualização e vínculo aos eventos. Separar aportes e resgates de rendimentos, taxas, tributos e valorização. Reproduzir projeções pelo núcleo determinístico com premissas explícitas, sem garantia de retorno e dentro de D09.7 |
 | Fundamentação | Referências existem, pertencem ao espaço e sustentam as afirmações |
 | Autorização | Nenhuma mutação sem confirmação e nenhuma leitura cruzada nos testes |
 | Robustez | Recusa segura em falha, prompt injection e dados incompletos |
@@ -166,6 +167,6 @@ Se o provedor falhar ou o orçamento acabar, manter lançamentos e relatórios d
 
 **DECISÃO APROVADA — D10.6/D10.7:** em falha da IA, preservar as operações seguras do núcleo financeiro. Processar tarefas recuperáveis em UTC com reservas renováveis, idempotência persistente, retentativas configuráveis e limites de concorrência. Reconciliar chamadas de resultado incerto e consumo antes de repetir. A retomada de uma ação financeira continua sujeita à proposta autorizada, à validade e às permissões da D08.
 
-**PENDÊNCIAS:** os parâmetros operacionais restantes constam de [architecture.md, seção 6](architecture.md#6-assíncrono-falhas-e-escalabilidade). Permanecem abertos os detalhamentos da D06, as condições comerciais da D07, os parâmetros da D08, os detalhamentos da D09 e da D10 e as decisões D11–D12, incluindo modelos, custos e retenção de IA em D08/D09. A documentação não autoriza execução de modelos ou contratação.
+**PENDÊNCIAS:** os parâmetros operacionais restantes constam de [architecture.md, seção 6](architecture.md#6-assíncrono-falhas-e-escalabilidade). Permanecem abertos os detalhamentos da D06, as condições comerciais da D07, os parâmetros da D08, os detalhamentos de D09–D11 e a decisão D12, incluindo modelos, custos e retenção de IA em D08/D09. A documentação não autoriza execução de modelos ou contratação.
 
 Fontes oficiais consultadas em 23/11/2026; validar APIs, contratos, modelos e preços antes da implementação.
