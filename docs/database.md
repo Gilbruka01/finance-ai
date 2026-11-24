@@ -14,7 +14,7 @@ Data: 23/11/2026. Estado: modelo lógico proposto; não contém migrations execu
 
 **DECISÃO APROVADA — D06:** importação OFX/CSV e cadastro manual no lançamento, com prévia, seleção, confirmação e rastreabilidade; processamento parcial recuperável de lotes, atomicidade por operação financeira e idempotência persistente. Integração bancária futura usa contrato normalizado/versionado, IDs internos estáveis e referências externas separadas. Essas decisões não aprovam automaticamente tabelas, campos ou índices.
 
-**PROPOSTA TÉCNICA:** tabelas, campos, tipos, cardinalidades, índices e detalhes físicos abaixo continuam propostas até a fase de implementação. A escolha de funções transacionais está aprovada, mas seus contratos, assinaturas e mecanismos de concorrência não estão definidos. As decisões orientam o modelo sem aprovar seu desenho físico completo. **PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, demais detalhes não decididos da D05, detalhamentos pendentes da D06 e D07–D12 e demais pontos do [registro de arquitetura](architecture.md#8-registro-de-decisões).
+**PROPOSTA TÉCNICA:** tabelas, campos, tipos, cardinalidades, índices e detalhes físicos abaixo continuam propostas até a fase de implementação. A escolha de funções transacionais está aprovada, mas seus contratos, assinaturas e mecanismos de concorrência não estão definidos. As decisões orientam o modelo sem aprovar seu desenho físico completo. **PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, demais detalhes não decididos da D05, detalhamentos pendentes da D06 e condições comerciais pendentes da D07 e D08–D12 e demais pontos do [registro de arquitetura](architecture.md#8-registro-de-decisões).
 
 Convenções propostas:
 
@@ -28,6 +28,10 @@ Convenções propostas:
 - Campos de identificação fiscal só são coletados quando necessários, com proteção e finalidade definidas. JSON não substitui relacionamentos ou restrições essenciais.
 
 ## 2. Identidade, espaços e planos
+
+**DECISÃO APROVADA — D07:** assinatura independente por workspace. Planos, recursos, preços e limites são configuráveis e versionados. O histórico de assinaturas, planos e pagamentos deve ser auditável e separado do razão financeiro do cliente.
+
+**PROPOSTA TÉCNICA:** vincular cada período da assinatura à versão do plano aplicável. Registrar início e fim do teste gratuito de 7 dias e a autorização de cobrança separadamente. Manter referências externas, eventos autenticados e evidências de cancelamento, renovação, mudança de plano, estorno ou contestação em registros restritos de cobrança. Aplicar evento e registrar seu resultado de forma idempotente, com conciliação após falhas. Uma mudança comercial não apaga dados financeiros nem altera saldos. Tabelas, campos, transições e prazos comerciais continuam sujeitos a detalhamento.
 
 | Entidade | Campos principais | Relações e invariantes |
 |---|---|---|

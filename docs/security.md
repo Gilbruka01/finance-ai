@@ -8,7 +8,7 @@ Data: 23/11/2026. Estado: planejamento de controles, sem configuração de servi
 
 **DECISÃO APROVADA — D01–D03:** gestão pessoal, familiar e empresarial, incluindo investimentos/projeções sem executar ordens ou pagamentos; três tipos de workspace; permissões individuais e por área empresarial; cópia independente pessoal/familiar; revogação imediata; partidas dobradas, estorno e novo lançamento, confirmação automática válida e saldos armazenados com integridade.
 
-**PROPOSTA TÉCNICA:** mecanismos de proteção deste documento materializam os requisitos aprovados, mas ainda não foram implementados ou aprovados em detalhe. **PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, demais detalhes não decididos da D05 e detalhamentos pendentes da D06 e D07–D12 do [registro de decisões](architecture.md#8-registro-de-decisões). D05.1 e a arquitetura principal da D05.2 estão aprovadas; documentação não equivale a controles implementados nem certificação de conformidade jurídica.
+**PROPOSTA TÉCNICA:** mecanismos de proteção deste documento materializam os requisitos aprovados, mas ainda não foram implementados ou aprovados em detalhe. **PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, demais detalhes não decididos da D05 e detalhamentos pendentes da D06 e condições comerciais pendentes da D07 e D08–D12 do [registro de decisões](architecture.md#8-registro-de-decisões). D05.1 e a arquitetura principal da D05.2 estão aprovadas; documentação não equivale a controles implementados nem certificação de conformidade jurídica.
 
 **DECISÃO APROVADA — D06:** importação OFX/CSV e cadastro manual no lançamento, com permissões específicas, arquivos privados, validação segura, processamento determinístico, confirmação do conjunto selecionado, auditoria e retenção limitada dos originais. Prazo de retenção, limites numéricos e mecanismos concretos permanecem pendentes. Open Finance automático será avaliado posteriormente.
 
@@ -106,7 +106,9 @@ Consentimento bancário deve registrar escopos, estado, concessão, validade for
 
 Webhooks: verificar autenticidade conforme protocolo do fornecedor, assinatura sobre conteúdo original, proteção contra replay quando suportada e deduplicação por evento. Persistir evento válido antes de confirmar recebimento; processar em job. Não confiar em ordem de chegada; reconciliar estado com o provedor. Resolver workspace por conexão/assinatura previamente cadastrada, não por campo livre do payload.
 
-Cobrança deve usar checkout/tokenização do provedor, sem armazenar dados completos de cartão. Permissões e plano são definidos pelo processamento confiável; retorno de sucesso no navegador não comprova pagamento.
+**DECISÃO APROVADA — D07:** somente o owner administra a assinatura do workspace. O teste gratuito de 7 dias dispensa cartão e exige prevenção de abuso. Cobranças automáticas exigem autorização. Usar checkout seguro sem armazenar número completo de cartão ou CVV. Validar planos e quotas no servidor. A inadimplência permite restrições progressivas, preservando consulta, exportação e dados conforme as permissões existentes.
+
+**DECISÃO APROVADA — eventos de cobrança:** autenticar webhooks, tratar reentregas com idempotência e conciliar com o provedor. Auditar assinaturas, planos e pagamentos. **PROPOSTA TÉCNICA:** resolver o workspace pela associação interna à assinatura, registrar ator, evento e resultado sem dados de cartão e confirmar pagamentos por evidência do provedor. O retorno do navegador não comprova pagamento. Os controles específicos contra abuso e a política comercial de inadimplência permanecem pendentes.
 
 ## 7. Privacidade e LGPD
 
