@@ -132,7 +132,7 @@ Transferências internas ao workspace não são receitas/despesas; pagamentos de
 
 **DECISÃO APROVADA — limites e falhas:** limites configuráveis de upload, registros, armazenamento, concorrência e processamento; recuperação controlada de falhas transitórias; rejeição de arquivos inválidos sem tentativas infinitas.
 
-**PENDÊNCIA DE DECISÃO:** valores numéricos dos limites, versões OFX e layouts homologados, detalhes do CSV padrão, classificação e contrapartidas, duração das reservas, concorrência, retries, retenção/descarte e procedimentos de recuperação. Permanecem pendentes políticas de sincronização e critérios comerciais e técnicos dos futuros provedores, além das dependências de condições comerciais da D07, parâmetros da D08, detalhamentos da D09 e decisões D10–D12.
+**PENDÊNCIA DE DECISÃO:** valores numéricos dos limites, versões OFX e layouts homologados, detalhes do CSV padrão, classificação e contrapartidas, duração das reservas, concorrência, retries, retenção/descarte e procedimentos de recuperação. Permanecem pendentes políticas de sincronização e critérios comerciais e técnicos dos futuros provedores, além das dependências de condições comerciais da D07, parâmetros da D08, detalhamentos da D09 e da D10 e decisões D11–D12.
 
 **PROPOSTA TÉCNICA — conexão automática futura:** jornada oficial de consentimento/autenticação → retorno verificado → referências externas e segredos protegidos → sincronização por jobs → normalização → deduplicação/conciliação → registro pelas funções financeiras. Conexões e consentimentos pertencem a um workspace; cobertura PF/PJ será avaliada por fornecedor. Revogação interrompe novas coletas; retenção dos dados existentes depende da política aplicável. Esse fluxo não está implementado nem contratado.
 
@@ -175,7 +175,27 @@ O worker não contorna D03/D04: ledger de partidas dobradas, saldos armazenados 
 
 **PROPOSTA TÉCNICA — detalhamento:** consumidores em lotes pequenos; registro operacional de jobs com workspace, tipo, referência de payload, tentativas, reserva, próxima execução, estado e chave de deduplicação, sem substituir pgmq por fila própria. Quando necessário, registrar tarefa e alteração de negócio na mesma transação; manter outbox transacional como proposta para publicação de eventos externos. Cron dispara trabalho limitado; o worker executa o processamento. Falhas transitórias podem ter retentativa; permanentes exigem tratamento específico; resultados externos incertos devem ser reconciliados antes de repetir efeitos. Mecanismos concretos permanecem sujeitos a detalhamento.
 
-**PENDÊNCIA DE DECISÃO — parâmetros operacionais de D05.2:** frequência dos agendamentos; fuso operacional e execuções perdidas; máximo de tentativas e políticas/intervalos de backoff; duração e renovação das reservas; concorrência global, por workspace e por provedor; dimensionamento, quantidade de instâncias e capacidade dos workers; planos comerciais, contratação e orçamento máximo; metas de disponibilidade e recuperação; retenção de logs/histórico; limiares de alertas e responsáveis operacionais; organização definitiva do código do worker no monorepositório; procedimentos detalhados de backup, restauração e retomada após desastres. A estrutura de pastas aprovada não é alterada nesta etapa. Demais parâmetros não decididos da D05 e detalhamentos pendentes da D06 e condições comerciais da D07, parâmetros da D08, detalhamentos da D09 e decisões D10–D12 continuam pendentes, incluindo região, backups, RPO/RTO e recuperação de banco e arquivos em D10.
+**DECISÕES APROVADAS — D10: infraestrutura e continuidade**
+
+| ID | Decisão operacional |
+|---|---|
+| D10.1 | Priorizar região brasileira quando disponível e adequada, avaliando latência, segurança, custo e requisitos de privacidade da D09. |
+| D10.2 | Adotar 99,5% de disponibilidade inicial como objetivo operacional, sem garantia contratual. |
+| D10.3 | Buscar RPO de 1 hora (janela de perda de dados) e RTO de 4 horas (tempo para retomar a operação segura). Verificar ambos em exercícios de recuperação. |
+| D10.4 | Manter backups independentes, criptografados e testados do banco, dos arquivos e das configurações essenciais. Usar recuperação pontual (PITR) se necessária para o RPO. Testar a restauração antes do lançamento e mensalmente. |
+| D10.5 | Controlar a retomada. Validar integridade financeira, permissões, exclusões e auditoria e reconciliar efeitos externos antes de reabrir a operação. |
+| D10.6 | Durante falhas, manter as funções que possam operar com segurança. O núcleo financeiro permanece independente da IA. |
+| D10.7 | Operar filas e agendamentos em UTC. Recuperar tarefas com idempotência persistente, reservas renováveis, retentativas configuráveis e limites de concorrência. Reconciliar efeitos externos incertos antes de repetir uma ação. |
+| D10.8 | Ter monitoramento, métricas e alertas desde o lançamento. |
+| D10.9 | Iniciar produção com uma instância web paga e um worker pago na Render, dimensionados por testes. Ampliar capacidade progressivamente conforme demanda e métricas. |
+| D10.10 | Priorizar infraestrutura econômica. Definir orçamento definitivo após os testes. |
+| D10.11 | Separar desenvolvimento, homologação e produção. Usar dados sintéticos fora de produção. |
+| D10.12 | Controlar CI/CD com testes obrigatórios, migrations compatíveis e procedimentos de recuperação de versões. |
+| D10.13 | Preservar portabilidade com exportação e procedimentos de migração testados. |
+| D10.14 | Atribuir responsabilidades operacionais, gerir incidentes e analisar as causas das falhas. |
+| D10.15 | Bloquear o lançamento comercial até comprovar segurança, integridade e capacidade de recuperação. |
+
+**PENDÊNCIAS D05.2/D10:** região definitiva, planos comerciais, contratação, orçamento, tecnologia de backup, retenção de cópias e logs, procedimentos detalhados de recuperação, frequência de agendamentos e tratamento de execuções perdidas. Testes orientarão capacidade, expansão, máximo de tentativas e backoff, duração e renovação das reservas, concorrência global, por workspace e por provedor, além dos limiares de alertas. Responsáveis específicos e organização do código do worker continuam em aberto.
 
 Manter aplicação web sem estado local persistente; usar pool de conexões; paginar resultados; indexar por workspace e período; limitar concorrência por cliente e provedor. Cache financeiro precisa incorporar workspace e autorização, com invalidação após alterações. Agregados podem ser reconstruídos; não substituir a fonte de verdade por cache ou saída de IA.
 
@@ -183,13 +203,13 @@ Escalar mediante métricas: latência de consultas, atraso da fila, taxa de erro
 
 ## 7. Operação e qualidade
 
-**PROPOSTA TÉCNICA:** ambientes separados de desenvolvimento, homologação e produção; dados sintéticos fora de produção; secrets isolados; CI com tipos, lint, testes de domínio, integração RLS, migrations e jornadas críticas. Implantação futura por pipeline revisado, com migrations compatíveis e estratégia de correção progressiva.
+**DECISÃO APROVADA — D10.11/D10.12:** separar desenvolvimento, homologação e produção, usar dados sintéticos fora de produção e controlar CI/CD com testes obrigatórios, migrations compatíveis e recuperação de versões. **PROPOSTA TÉCNICA:** secrets isolados; CI com tipos, lint, testes de domínio, integração RLS, migrations e jornadas críticas. Implantação futura por pipeline revisado, com migrations compatíveis e estratégia de correção progressiva.
 
 Observar erros, latência, atraso de sincronização, idade dos dados, custo de IA, falhas de autorização e restauração. Definir responsáveis por incidentes e rotinas de revisão de dependências. GitHub e Codex não devem receber segredos ou extratos reais em prompts, logs ou fixtures.
 
 ## 8. Registro de decisões
 
-Os identificadores abaixo são usados nos demais documentos. D01–D04, D05.1, a arquitetura principal da D05.2 e as decisões de D06, D07, D08 e D09 são **DECISÃO APROVADA**. D05 e D06 ainda possuem parâmetros e detalhamentos pendentes. Seus requisitos não aprovam automaticamente estruturas de banco, contratos comerciais ou detalhes de implementação.
+Os identificadores abaixo são usados nos demais documentos. D01–D04, D05.1, a arquitetura principal da D05.2 e as decisões de D06, D07, D08, D09 e D10 são **DECISÃO APROVADA**. D05 e D06 ainda possuem parâmetros e detalhamentos pendentes. Seus requisitos não aprovam automaticamente estruturas de banco, contratos comerciais ou detalhes de implementação.
 
 | ID | Status | Conteúdo aprovado |
 |---|---|---|
@@ -208,7 +228,7 @@ Os identificadores abaixo são usados nos demais documentos. D01–D04, D05.1, a
 
 **DECISÃO APROVADA — D09:** acesso no lançamento a partir de 18 anos completos em todos os workspaces. O acesso futuro de menores para educação financeira supervisionada depende de validações jurídicas e técnicas e da revisão de D02/D08. Em investimentos, análise, acompanhamento, planejamento e simulação têm caráter informativo conforme D09.7. As demais funcionalidades de D01–D08 mantêm seu escopo e suas regras de autorização. Os requisitos por tratamento, fornecedor e etapa comercial constam de [security.md](security.md).
 
-**PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, demais detalhes não decididos da D05 e detalhamentos pendentes da D06 e condições comerciais da D07, parâmetros da D08, detalhamentos da D09 e decisões D10–D12 permanecem abertos. As sugestões abaixo são preservadas como **PROPOSTA TÉCNICA**, sem aprovação implícita nem autorização para implementação ou contratação.
+**PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, demais detalhes não decididos da D05 e detalhamentos pendentes da D06 e condições comerciais da D07, parâmetros da D08, detalhamentos da D09 e da D10 e decisões D11–D12 permanecem abertos. As sugestões abaixo são preservadas como **PROPOSTA TÉCNICA**, sem aprovação implícita nem autorização para implementação ou contratação.
 
 | ID | Decisão | Proposta ou critério |
 |---|---|---|
@@ -218,7 +238,7 @@ Os identificadores abaixo são usados nos demais documentos. D01–D04, D05.1, a
 | D07 — detalhamento comercial | Cobrança e planos | D07.1–D07.14 aprovadas na seção 5. Fornecedor, preços, quotas numéricas, periodicidade, tolerância à inadimplência e demais condições pendentes. |
 | D08 — detalhamento | IA | Modelos específicos, tarifas, orçamento numérico, quotas numéricas, retenção, métodos de projeção, limiares de qualidade e parâmetros operacionais permanecem pendentes. |
 | D09 — detalhamento | Privacidade e requisitos jurídicos | Prazos de retenção, estrutura jurídica e tributária, bases legais definitivas, contratos, transferências internacionais, documentos jurídicos definitivos e requisitos de acesso futuro de menores |
-| D10 | Continuidade | Região, disponibilidade, RPO/RTO, backups e orçamento operacional |
+| D10 — detalhamento | Continuidade | Região definitiva, planos, orçamento, tecnologia de backup, retenção, capacidade, concorrência, retentativas, limiares de alertas e responsáveis específicos |
 | D11 | Políticas financeiras | Arredondamento, datas, fechamento, parcelamento e reconhecimento de despesas |
 | D12 | Metas e calendário | SLOs, desempenho, acessibilidade, capacidade, equipe e datas de entrega |
 
@@ -232,7 +252,7 @@ Os identificadores abaixo são usados nos demais documentos. D01–D04, D05.1, a
 | Saldos incorretos | Razão balanceado, precisão decimal, transações, reconciliação e estornos | D03/D11 |
 | Open Finance indisponível ou caro | Preservar importação manual e adaptadores substituíveis; avaliar cobertura, segurança e custo antes de contratar | D06: integração automática futura, sem bloquear o lançamento manual |
 | IA incorreta ou onerosa | Ferramentas restritas, avaliações, quotas e confirmação vinculada à proposta | D08 |
-| Dependência de fornecedor | Domínio desacoplado, portabilidade da hospedagem, exportação e restauração testadas | D04/D05.1 e arquitetura principal D05.2 aprovadas; parâmetros operacionais, detalhes restantes da D05 e D10 pendentes |
+| Dependência de fornecedor | Domínio desacoplado, portabilidade da hospedagem, exportação e restauração testadas | D04/D05.1 e arquitetura principal D05.2 aprovadas; parâmetros operacionais, detalhamentos restantes da D05 e da D10 pendentes |
 | Jobs duplicados ou interrompidos | Idempotência persistente, reservas recuperáveis, retentativas e tratamento de falhas | Arquitetura principal D05.2 aprovada; mecanismos concretos e parâmetros operacionais pendentes |
 | Escopo empresarial excessivo | Critérios explícitos de lançamento e fases com aceite | D01/D12 |
 
