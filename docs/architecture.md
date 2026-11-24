@@ -155,7 +155,7 @@ Cada efeito confirmado mantém as partidas dobradas e a atualização atômica d
 
 **DECISÃO APROVADA — limites e falhas:** limites configuráveis de upload, registros, armazenamento, concorrência e processamento; recuperação controlada de falhas transitórias; rejeição de arquivos inválidos sem tentativas infinitas.
 
-**PENDÊNCIA DE DECISÃO:** valores numéricos dos limites, versões OFX e layouts homologados, detalhes do CSV padrão, classificação e contrapartidas, duração das reservas, concorrência, retries, retenção/descarte e procedimentos de recuperação. Permanecem pendentes políticas de sincronização e critérios comerciais e técnicos dos futuros provedores, além das dependências de condições comerciais da D07, parâmetros da D08, detalhamentos de D09–D11 e a decisão D12.
+**PENDÊNCIA DE DECISÃO:** valores numéricos dos limites, versões OFX e layouts homologados, detalhes do CSV padrão, classificação e contrapartidas, duração das reservas, concorrência, retries, retenção/descarte e procedimentos de recuperação. Permanecem pendentes políticas de sincronização e critérios comerciais e técnicos dos futuros provedores, além das dependências de condições comerciais da D07, parâmetros da D08, detalhamentos de D09–D12.
 
 **PROPOSTA TÉCNICA — conexão automática futura:** jornada oficial de consentimento/autenticação → retorno verificado → referências externas e segredos protegidos → sincronização por jobs → normalização → deduplicação/conciliação → registro pelas funções financeiras. Conexões e consentimentos pertencem a um workspace; cobertura PF/PJ será avaliada por fornecedor. Revogação interrompe novas coletas; retenção dos dados existentes depende da política aplicável. Esse fluxo não está implementado nem contratado.
 
@@ -218,7 +218,7 @@ O worker não contorna D03/D04: ledger de partidas dobradas, saldos armazenados 
 | D10.14 | Atribuir responsabilidades operacionais, gerir incidentes e analisar as causas das falhas. |
 | D10.15 | Bloquear o lançamento comercial até comprovar segurança, integridade e capacidade de recuperação. |
 
-**PENDÊNCIAS D05.2/D10:** região definitiva, planos comerciais, contratação, orçamento, tecnologia de backup, retenção de cópias e logs, procedimentos detalhados de recuperação, frequência de agendamentos e tratamento de execuções perdidas. Testes orientarão capacidade, expansão, máximo de tentativas e backoff, duração e renovação das reservas, concorrência global, por workspace e por provedor, além dos limiares de alertas. Responsáveis específicos e organização do código do worker continuam em aberto.
+**PENDÊNCIAS D05.2/D10:** região definitiva, planos comerciais, contratação, orçamento, tecnologia de backup, retenção de cópias e logs, procedimentos detalhados de recuperação, frequência de agendamentos e tratamento de execuções perdidas. Testes orientarão capacidade, expansão, máximo de tentativas e backoff, duração e renovação das reservas, concorrência global, por workspace e por provedor, além dos limiares de alertas operacionais além dos percentuais orçamentários da D12.11. Responsáveis específicos e organização do código do worker continuam em aberto.
 
 Manter aplicação web sem estado local persistente; usar pool de conexões; paginar resultados; indexar por workspace e período; limitar concorrência por cliente e provedor. Cache financeiro precisa incorporar workspace e autorização, com invalidação após alterações. Agregados podem ser reconstruídos; não substituir a fonte de verdade por cache ou saída de IA.
 
@@ -232,7 +232,9 @@ Observar erros, latência, atraso de sincronização, idade dos dados, custo de 
 
 ## 8. Registro de decisões
 
-Os identificadores abaixo são usados nos demais documentos. D01–D04, D05.1, a arquitetura principal da D05.2 e as decisões de D06, D07, D08, D09, D10 e D11 são **DECISÃO APROVADA**. D05 e D06 ainda possuem parâmetros e detalhamentos pendentes. Seus requisitos não aprovam automaticamente estruturas de banco, contratos comerciais ou detalhes de implementação.
+Os identificadores abaixo são usados nos demais documentos. D01–D04, D05.1, a arquitetura principal da D05.2 e as decisões de D06, D07, D08, D09, D10, D11 e D12 são **DECISÃO APROVADA**. D05 e D06 ainda possuem parâmetros e detalhamentos pendentes. Seus requisitos não aprovam automaticamente estruturas de banco, contratos comerciais ou detalhes de implementação.
+
+**DECISÃO APROVADA — D12:** a entrega é incremental, com responsabilidade e aprovação humanas por etapa. A sequência, os critérios de passagem e as metas de referência constam de [product-roadmap.md](product-roadmap.md). O aceite depende de evidências de testes. Implementação e publicação exigem autorização explícita.
 
 | ID | Status | Conteúdo aprovado |
 |---|---|---|
@@ -251,7 +253,7 @@ Os identificadores abaixo são usados nos demais documentos. D01–D04, D05.1, a
 
 **DECISÃO APROVADA — D09:** acesso no lançamento a partir de 18 anos completos em todos os workspaces. O acesso futuro de menores para educação financeira supervisionada depende de validações jurídicas e técnicas e da revisão de D02/D08. Em investimentos, análise, acompanhamento, planejamento e simulação têm caráter informativo conforme D09.7. As demais funcionalidades de D01–D08 mantêm seu escopo e suas regras de autorização. Os requisitos por tratamento, fornecedor e etapa comercial constam de [security.md](security.md).
 
-**PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, demais detalhes não decididos da D05 e detalhamentos pendentes da D06 e condições comerciais da D07, parâmetros da D08, detalhamentos de D09–D11 e a decisão D12 permanecem abertos. As sugestões abaixo são preservadas como **PROPOSTA TÉCNICA**, sem aprovação implícita nem autorização para implementação ou contratação.
+**PENDÊNCIA DE DECISÃO:** parâmetros operacionais da D05.2, demais detalhes não decididos da D05 e detalhamentos pendentes da D06 e condições comerciais da D07, parâmetros da D08, detalhamentos de D09–D12 permanecem abertos. As sugestões abaixo são preservadas como **PROPOSTA TÉCNICA**, sem aprovação implícita nem autorização para implementação ou contratação.
 
 | ID | Decisão | Proposta ou critério |
 |---|---|---|
@@ -259,11 +261,11 @@ Os identificadores abaixo são usados nos demais documentos. D01–D04, D05.1, a
 | D05 — detalhes restantes | Parâmetros operacionais da hospedagem | Plano comercial, dimensionamento por testes e formato de implantação a definir; plataforma web Render já aprovada em D05.1 |
 | D06 — detalhamento e integração futura | Parâmetros da importação e futura seleção de provedor | Limites, retenção, homologação de formatos, contrapartidas, recuperação, políticas de sincronização e critérios técnicos/comerciais; decisões arquiteturais da seção 5 já aprovadas |
 | D07 — detalhamento comercial | Cobrança e planos | D07.1–D07.14 aprovadas na seção 5. Fornecedor, preços, quotas numéricas, periodicidade, tolerância à inadimplência e demais condições pendentes. |
-| D08 — detalhamento | IA | Modelos específicos, tarifas, orçamento numérico, quotas numéricas, retenção, métodos de projeção, limiares de qualidade e parâmetros operacionais permanecem pendentes. |
+| D08 — detalhamento | IA | Modelos específicos, tarifas, orçamento numérico, quotas numéricas, retenção, métodos de projeção, metodologias detalhadas de avaliação e parâmetros operacionais permanecem pendentes. |
 | D09 — detalhamento | Privacidade e requisitos jurídicos | Prazos de retenção, estrutura jurídica e tributária, bases legais definitivas, contratos, transferências internacionais, documentos jurídicos definitivos e requisitos de acesso futuro de menores |
-| D10 — detalhamento | Continuidade | Região definitiva, planos, orçamento, tecnologia de backup, retenção, capacidade, concorrência, retentativas, limiares de alertas e responsáveis específicos |
+| D10 — detalhamento | Continuidade | Região definitiva, planos, orçamento, tecnologia de backup, retenção, capacidade, concorrência, retentativas, limiares de alertas operacionais além dos percentuais orçamentários da D12.11 e responsáveis específicos |
 | D11 — detalhamento | Políticas financeiras | Precisão física, métodos avançados de rentabilidade, instrumentos, cotações, fórmulas detalhadas, métodos definitivos de projeção e desenho físico do banco |
-| D12 | Metas e calendário | SLOs, desempenho, acessibilidade, capacidade, equipe e datas de entrega |
+| D12 — detalhamento | Entrega e aceite | Disponibilidade diária, datas efetivas, orçamento numérico, fornecedores ainda a selecionar, responsáveis específicos e metodologias detalhadas de testes |
 
 **PENDÊNCIA DE DECISÃO — detalhamento sem reabrir D01–D03:** cobertura de instrumentos e fontes de investimento; métodos de projeção; catálogo de áreas empresariais; seleção de campos/anexos na cópia familiar e seu tratamento nos relatórios; titularidade de conexões compartilhadas; frequência e procedimento de reparo da conciliação de saldos. Nenhuma dessas lacunas autoriza implementação nesta tarefa.
 

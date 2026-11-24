@@ -29,7 +29,7 @@ Data: 23/11/2026. Estado: proposta técnica; sem integração ou execução de m
 
 **DECISÃO APROVADA — D09:** no contexto de investimentos, a IA apoia análise, acompanhamento, planejamento e simulação de caráter informativo, conforme D09.7. A execução de operações internas pela IA continua sujeita à autorização explícita da D08, dentro do escopo e das permissões estabelecidas. É proibido treinar modelos com dados dos clientes no lançamento, comercializar dados financeiros ou usá-los para publicidade. Desenvolvimento e testes usam dados sintéticos. Quando aplicável, oferecer transparência, revisão e contestação de decisões automatizadas, preservando a privacidade do autor e o isolamento por workspace. O uso futuro por menores depende das validações e revisões previstas em D09.3.
 
-**PENDÊNCIA DE DECISÃO:** Modelos específicos, tarifas, orçamento numérico, quotas numéricas, retenção, métodos de projeção, limiares de qualidade e parâmetros operacionais permanecem pendentes.
+**PENDÊNCIA DE DECISÃO:** Modelos específicos, tarifas, orçamento numérico, quotas numéricas, retenção, métodos de projeção, metodologias detalhadas de avaliação e parâmetros operacionais permanecem pendentes.
 
 **PROPOSTA TÉCNICA:** os contratos de ferramentas, estados de execução e mecanismos de controle abaixo detalham essas decisões. Esta documentação não autoriza execução de modelos ou envio de dados reais.
 
@@ -155,7 +155,7 @@ A seleção do modelo deve considerar tratamento de dados além de desempenho. F
 | Utilidade | Avaliação humana de respostas PF/PJ e correções de categorização |
 | Operação | Latência, tokens, custo por tarefa/workspace e taxa de falhas |
 
-Definir amostra, limiares e responsáveis antes do piloto (D08/D12). Falhas de isolamento ou mutação não autorizada bloqueiam lançamento. Zero falhas no conjunto de testes não é prova de impossibilidade de falha; manter monitoramento e revisão.
+**DECISÃO APROVADA — D12.5/D12.7/D12.10:** avaliar pelo menos 200 cenários, com cálculos corretos em 100% dos casos testados, respostas factualmente corretas ≥95%, categorização correta ≥90% e avaliações humanas satisfatórias ≥90%. Qualquer vazamento ou alteração não autorizada bloqueia o lançamento. Medir p95 de até 5 s para início da resposta e acompanhar a disponibilidade da IA separadamente da disponibilidade do núcleo financeiro. Os valores são critérios de aceite. Composição da amostra, metodologia e responsáveis específicos continuam pendentes.
 
 Registrar modelo, versão de prompt/esquema, referências de dados, ferramenta, latência, consumo e correlação. Evitar logs com raciocínio interno, segredos ou payload completo; justificativa exibida deve ser breve e verificável.
 
@@ -167,6 +167,6 @@ Se o provedor falhar ou o orçamento acabar, manter lançamentos e relatórios d
 
 **DECISÃO APROVADA — D10.6/D10.7:** em falha da IA, preservar as operações seguras do núcleo financeiro. Processar tarefas recuperáveis em UTC com reservas renováveis, idempotência persistente, retentativas configuráveis e limites de concorrência. Reconciliar chamadas de resultado incerto e consumo antes de repetir. A retomada de uma ação financeira continua sujeita à proposta autorizada, à validade e às permissões da D08.
 
-**PENDÊNCIAS:** os parâmetros operacionais restantes constam de [architecture.md, seção 6](architecture.md#6-assíncrono-falhas-e-escalabilidade). Permanecem abertos os detalhamentos da D06, as condições comerciais da D07, os parâmetros da D08, os detalhamentos de D09–D11 e a decisão D12, incluindo modelos, custos e retenção de IA em D08/D09. A documentação não autoriza execução de modelos ou contratação.
+**PENDÊNCIAS:** os parâmetros operacionais restantes constam de [architecture.md, seção 6](architecture.md#6-assíncrono-falhas-e-escalabilidade). Permanecem abertos os detalhamentos da D06, as condições comerciais da D07, os parâmetros da D08, os detalhamentos de D09–D12, incluindo modelos, custos e retenção de IA em D08/D09. A documentação não autoriza execução de modelos ou contratação.
 
 Fontes oficiais consultadas em 23/11/2026; validar APIs, contratos, modelos e preços antes da implementação.
