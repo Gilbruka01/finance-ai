@@ -34,6 +34,7 @@ Data: 23/11/2026. Estado: proposta técnica; sem integração ou execução de m
 **PROPOSTA TÉCNICA:** os contratos de ferramentas, estados de execução e mecanismos de controle abaixo detalham essas decisões. Esta documentação não autoriza execução de modelos ou envio de dados reais.
 
 Referências internas: [arquitetura](architecture.md), [modelo de dados](database.md), [segurança](security.md) e [roadmap](product-roadmap.md).
+**Aplicação de F1.07/F1.08 à IA:** ferramentas usam a identidade validada no servidor e as permissões atuais do workspace selecionado. A troca de workspace ou a remoção de um participante exige nova verificação de escopo. Aplicar restrição por área e operação, RLS e privilégios mínimos, preservando a autorização explícita de D08. Na Fundação, os testes de isolamento usam dados sintéticos e não exigem chamadas ao modelo.
 
 ## 2. Capacidades e evolução
 

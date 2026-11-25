@@ -39,7 +39,7 @@ Convenções propostas:
 |---|---|---|
 | auth.users | Identidade gerenciada pelo Supabase | Credenciais ficam no Auth, não em tabelas próprias |
 | profiles | id → auth.users, display_name, locale | Uma identidade possui no máximo um perfil; sem senha ou token bancário |
-| workspaces | id, kind personal/family/business, name, owner_user_id, currency, timezone, status | Pessoal privado e sem convidados; familiar e empresarial compartilhados; proposta de no máximo um pessoal ativo por proprietário |
+| workspaces | id, kind personal/family/business, name, owner_user_id, currency, timezone, status | Um pessoal ativo por usuário, privado e sem convidados, criado após cadastro validado. Familiar e empresarial são voluntários |
 | workspace_members | workspace_id, user_id, role, status | Único por workspace/usuário; proprietário deve possuir associação owner ativa |
 | workspace_invitations | workspace_id, email_normalized, role, token_hash, expires_at, accepted_at | Token de uso único; aceitação exige identidade correspondente; não permite convite owner |
 | workspace_member_permissions | workspace_id, member_user_id, area, action, effect | FK composta para associação; granularidade empresarial; catálogo e precedência ainda propostos |
@@ -51,7 +51,9 @@ Convenções propostas:
 | billing_events | workspace_id, provider, external_event_id, payload_ref, state | Evento externo único por provedor; escrita apenas pelo processamento confiável |
 | usage_counters | workspace_id, metric, period_start, quantity | Único por workspace/métrica/período; incrementos atômicos |
 
-**DECISÃO APROVADA — D02:** pessoal sem convidados; convites individuais por e-mail, com validade, uso único e aceitação obrigatória; remoção revoga imediatamente o acesso e preserva registros e auditoria. Transferência de propriedade exige autorização do owner atual e aceitação do novo. Somente owner administra assinatura; não há exigência geral de dupla aprovação financeira.
+**D02 e F1.05–F1.09 aprovadas:** o modelo lógico de identidade e participação usa UUIDs, integridade referencial e instantes técnicos em UTC. O cadastro validado cria automaticamente o pessoal único. Em espaços compartilhados, criar o workspace e a associação owner na mesma transação. Remover participante revoga imediatamente o acesso e preserva a autoria histórica. Somente owner administra assinatura. Não há exigência geral de dupla aprovação financeira.
+
+Convite individual por e-mail vale por 7 dias. Proteger o token, invalidar o anterior no reenvio e revalidar destinatário, validade, revogação e uso único no aceite. A transferência vale por 24 horas e exige reautenticação, autorização do atual proprietário e aceite do destinatário. Revalidar token e autoridades antes da troca atômica de proprietário único. Tabelas, campos e mecanismos concretos permanecem propostas. Validar o modelo em Supabase local com migrations versionadas e dados sintéticos.
 
 **PROPOSTA TÉCNICA:** em espaços compartilhados, transferência aceita atualiza `owner_user_id` e papéis em uma transação, sem deixar o espaço sem owner e revalidando identidades e associações. Transferência de um espaço pessoal não deve converter privacidade individual em colaboração; fluxo aplicável ao pessoal permanece sem definição. Regras entre tabelas requerem operações transacionais e validação no banco. Remoção desativa a associação em vez de apagar sua evidência histórica; operações comuns, jobs delegados e IA verificam associação/permissões atuais.
 

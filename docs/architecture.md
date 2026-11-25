@@ -69,7 +69,24 @@ Owner tem controle integral do workspace e é o único que administra sua assina
 
 Convites são individuais por e-mail, com validade, uso único e aceitação obrigatória. Remoção revoga imediatamente o acesso e preserva registros/auditoria. Transferência de propriedade exige autorização do owner atual e aceitação do novo owner. Compartilhamento pessoal → familiar ocorre somente por cópia independente: original privado, sem sincronização automática e sem concessão de acesso à origem.
 
-**PROPOSTA TÉCNICA:** unicidade do workspace pessoal ativo por proprietário e estruturas de permissões, convites, cópias e transferência descritas em [database.md](database.md). Catálogo de áreas e precedência entre permissões ainda precisam de detalhamento; não estão implicitamente aprovados por D02.
+**DECISÕES APROVADAS — Fundação (F1.01–F1.12)**
+
+| ID | Diretriz |
+|---|---|
+| F1.01 | Desenvolver em Windows com WSL 2 e Docker, Node.js LTS, pnpm e Supabase CLI. Fixar versões após validar o ambiente. |
+| F1.02 | Preservar o monorepo aprovado e seus limites de pacote. Adotar Zod, React Hook Form, shadcn/ui, Lucide, ESLint, Prettier, Vitest, Playwright e pgTAP. |
+| F1.03 | Usar Supabase local, migrations versionadas e dados sintéticos. |
+| F1.04 | Oferecer autenticação por e-mail e senha ou Google, confirmação de e-mail, recuperação de senha, MFA TOTP opcional, sessões seguras, proteção contra abuso e reautenticação para operações sensíveis. Preservar o acesso a partir de 18 anos completos da D09. |
+| F1.05 | Modelar identidades, workspaces, participantes, convites, papéis, permissões, transferências de propriedade e auditoria com UUIDs, integridade referencial e instantes técnicos em UTC. |
+| F1.06 | Criar automaticamente um workspace pessoal ativo por usuário após cadastro validado, privado e sem convidados. A criação de workspaces familiares e empresariais é voluntária e atômica com a associação do proprietário. |
+| F1.07 | Usar owner/admin/editor/viewer no familiar. No empresarial, personalizar permissões por área e operação, com negação por padrão e proteção contra elevação indevida. Somente o owner administra a assinatura. |
+| F1.08 | Exigir RLS nas tabelas expostas, autorização no servidor, privilégios mínimos, funções restritas e testes de isolamento. |
+| F1.09 | Convites individuais ao destinatário específico valem por 7 dias, são de uso único e têm revogação imediata. Reenviar invalida o anterior. A transferência de propriedade vale por 24 horas, exige reautenticação e aceite e preserva um único owner atomicamente. Proteger tokens e revalidar as condições ao efetivar cada operação. |
+| F1.10 | Interface responsiva e profissional em pt-BR, com temas claro e escuro, navegação e seleção de workspace. Preservar o objetivo WCAG 2.2 AA. |
+| F1.11 | Usar GitHub Actions para verificar tipagem, lint, dependências, build e migrations e executar testes unitários, de banco, RLS e interface. A CI não faz deploy automático em produção. |
+| F1.12 | Condicionar a conclusão da Fundação à comprovação dos 14 critérios do [roadmap](product-roadmap.md#aceite-da-fundação). |
+
+**Pendências:** versões exatas, esquema físico, matriz definitiva de permissões, políticas RLS detalhadas, parâmetros de sessão, método de verificação etária, configuração OAuth do Google, identidade visual detalhada e metodologia de testes. As estruturas descritas em [database.md](database.md) são propostas técnicas.
 
 **PROPOSTA TÉCNICA — decomposição funcional do escopo aprovado:**
 

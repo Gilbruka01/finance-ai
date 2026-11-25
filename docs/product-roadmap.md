@@ -80,6 +80,28 @@ Compartilhado no lançamento: cadastro e autenticação, seleção clara de work
 | 8 — Evolução posterior | Avaliar integração automática por Pluggy, Belvo ou outros provedores; ampliar métodos de projeção/investimentos, extração documental e otimizações | Evidência de uso/custo; avaliação técnica/comercial de Open Finance; políticas de sincronização, consentimento, segurança e autorização própria | Adaptador preserva IDs internos, conciliação e histórico confirmado; cobertura PF/PJ e falhas validadas antes de disponibilizar integração; demais evoluções não adiam requisitos aprovados do lançamento |
 
 O compromisso anterior exigia Open Finance no lançamento e tratava a importação manual apenas como alternativa operacional. D06 revisa expressamente esse compromisso: o lançamento comercial utiliza OFX/CSV e cadastro manual, e a conexão automática passa para evolução posterior. Não há obrigação de contratar ou selecionar provedor na fase 0. Cobrança e IA podem avançar com dados sintéticos após contratos internos estáveis; todas as frentes preservam os critérios de segurança e domínio. Nenhum outro requisito aprovado de D01 é adiado por essa revisão.
+### Aceite da Fundação
+
+**Planejamento de referência (fase 1 da D12):** semana 1 — 1A Ambiente, 1B Estrutura e 1C Identidade e autenticação. Semana 2 — 1D Workspaces e segurança. Semana 3 — 1E Interface e 1F Validação final. A organização abaixo descreve as evidências a obter. O encerramento exige comprovação dos 14 critérios e aprovação humana.
+
+| Critério | Evidência para aceite de F1.12 |
+|---|---|
+| 1. Ambiente | Reproduzir o ambiente F1.01 com as versões validadas e registradas. |
+| 2. Estrutura | Conferir o monorepo, os pacotes e as ferramentas de F1.02. |
+| 3. Supabase e migrations | Recriar o Supabase local com migrations versionadas e dados sintéticos. |
+| 4. Autenticação | Validar os dois métodos de entrada, confirmação, recuperação, TOTP opcional, sessões, proteção contra abuso, reautenticação e requisito etário. |
+| 5. Workspaces | Demonstrar o pessoal único automático e privado e a criação voluntária e atômica de familiar e empresarial com owner. |
+| 6. Permissões | Exercitar papéis familiares, permissões empresariais, negação por padrão e assinatura exclusiva do owner. |
+| 7. Convites | Testar destinatário, expiração em 7 dias, uso único, revogação e invalidação no reenvio. |
+| 8. Propriedade | Testar reautenticação, aceite, expiração em 24 horas, revalidação e troca atômica de owner. |
+| 9. Isolamento | Demonstrar autorização no servidor, RLS, funções restritas e bloqueio de acesso cruzado e elevação de privilégio. |
+| 10. Revogação | Demonstrar a perda imediata de acesso após remoção, inclusive com sessão anterior, preservando a auditoria. |
+| 11. Interface e acessibilidade | Validar navegação e seleção de workspace em pt-BR, nos dois temas e em telas móveis e desktop, com testes manuais e automatizados para WCAG 2.2 AA. |
+| 12. Testes | Apresentar os resultados dos testes unitários, banco, RLS e interface e aplicar os critérios de qualidade da D12. |
+| 13. CI | Verificar no GitHub Actions testes, tipagem, lint, dependências, build e migrations, sem deploy automático em produção. |
+| 14. Dados e documentação | Comprovar ausência de segredos e dados reais nos artefatos de desenvolvimento e manter atualizada a documentação da Fundação. |
+
+**Estado:** diretrizes e critérios aprovados documentalmente. A execução, a coleta de evidências e o aceite da fase permanecem futuros.
 
 ## 4. Estratégia de validação
 
