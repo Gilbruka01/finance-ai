@@ -1,0 +1,6 @@
+{
+  "name": "@finance-ai/integrations",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts"
+}

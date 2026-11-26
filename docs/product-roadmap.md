@@ -142,3 +142,28 @@ Estimar hospedagem, workers, Supabase/compute/banco/Storage/egress/backups, proc
 ## 7. Próximo marco de decisão
 
 D01–D04, D05.1 e a arquitetura principal da D05.2 permanecem aprovadas e preservadas. D06 aprova o lançamento com OFX/CSV e cadastro manual, revisando explicitamente a obrigatoriedade anterior de Open Finance no lançamento. Permanecem pendentes os parâmetros operacionais de D05/D06, a integração automática futura e condições comerciais da D07, parâmetros da D08, detalhamentos de D09–D12, além dos detalhamentos de investimentos/projeções, áreas, cópia familiar e conciliação de saldos. A escolha definitiva da região, a tecnologia de backup e os procedimentos detalhados de recuperação continuam abertos. Próximas alterações, implementação, contratação, migrations, commit, push e deploy exigem autorização própria.
+
+### Evidências do Bloco 1B — estrutura local
+
+Em 26/11/2026, no Ubuntu 24.04 em WSL 2, foram validados Node 24.22.3, pnpm 11.29.0, Docker 29.9.3 e Supabase CLI 3.4.0. Para reproduzir, instalar com `pnpm install --frozen-lockfile` e preparar o Chromium com `pnpm exec playwright install chromium --only-shell`. As bibliotecas Ubuntu libnspr4, libnss3 e libasound2t64 devem estar instaladas. Passaram em sequência typecheck, lint sem avisos, format:check, um teste Vitest, build, um teste Playwright sem LD_LIBRARY_PATH, instalação congelada e auditoria sem vulnerabilidades conhecidas. Vite avisou sobre o carregador de configuração de uma versão futura.
+
+A primeira validação limitou os contêineres ao banco para poupar memória. Na repetição completa o Windows reservava as portas 54315–54414. A configuração local usa a faixa 55320–55329. Com Docker ativo, executar `supabase start` sem exclusões. PostgreSQL aceitou conexões na porta publicada 55322. Auth, REST e Storage responderam HTTP 200 pelo gateway 55321 e Studio respondeu 200 em 55323. Uma transação pgTAP criou a extensão, executou plan(1), verificou que 2+2 = 4, finalizou e fez rollback. Encerrar com `supabase stop`. Esses testes de disponibilidade não exercitam fluxos de negócio.
+
+As seis exceções de idade mínima registradas na resolução inicial permanecem limitadas às versões indicadas. Sua finalidade no grafo é:
+
+| Exceção | Justificativa |
+|---|---|
+| @types/node 24.19.4 | Tipagem direta do runtime Node 24 para ferramentas e testes. |
+| @types/react 19.3.3 | Tipagem direta de componentes e JSX para React 19. |
+| @vitest/coverage-v8 5.1.2 | Provedor de cobertura fixado na versão do runner. O teste básico não mede a meta de cobertura. |
+| vitest 5.1.2 | Runner direto aprovado para testes unitários. |
+| @vitest/mocker 5.1.2 | Dependência transitiva de substituição de módulos do Vitest aprovado. |
+| @vitest/spy 5.1.2 | Dependência transitiva de observação de chamadas e mocks do Vitest aprovado. |
+
+Reservados para uso direto posterior: shadcn CLI 4.23.0, lucide-react 1.80.0, @supabase/supabase-js 2.119.2, @supabase/ssr 0.12.7, Zod 4.6.7, react-hook-form 7.92.0 e @hookform/resolvers 7.0.9. O aceite da Fundação permanece condicionado às etapas posteriores.
+
+**Bloco 1B concluído. Decisões aprovadas na publicação**
+
+- **1B-D01:** usar as portas locais 55320–55329 para os serviços do Supabase.
+- **1B-D02:** aceitar exclusivamente as seis exceções de idade mínima da tabela acima, restritas aos pares de pacote e versão indicados.
+- **1B-D03:** aceitar temporariamente o aviso informativo do Vite sobre o carregador futuro da configuração de testes.

@@ -1,0 +1,6 @@
+{
+  "name": "@finance-ai/ai-engine",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts"
+}
