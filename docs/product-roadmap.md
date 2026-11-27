@@ -167,3 +167,11 @@ Reservados para uso direto posterior: shadcn CLI 4.23.0, lucide-react 1.80.0, @s
 - **1B-D01:** usar as portas locais 55320–55329 para os serviços do Supabase.
 - **1B-D02:** aceitar exclusivamente as seis exceções de idade mínima da tabela acima, restritas aos pares de pacote e versão indicados.
 - **1B-D03:** aceitar temporariamente o aviso informativo do Vite sobre o carregador futuro da configuração de testes.
+
+### Bloco 1C — identidade e autenticação
+
+As decisões 1C-D01 a 1C-D19 e as evidências de identidade, sessões e MFA constam do registro de segurança.
+
+- **1C-D20 aprovada.** O encerramento técnico local exige aprovação de todos os testes locais obrigatórios. Requisitos de segurança sem validação integral continuam abertos. A operação comercial exige avaliação própria.
+- **1C-D21 aprovada.** Os critérios de lançamento da D12 exigem comprovar a rejeição de senhas comprometidas e a reautenticação de até cinco minutos também na API direta do provedor, a recuperação segura após perda de todos os fatores MFA e o Google OAuth real com vinculação segura e reautenticação.
+- **1C-D22 aprovada.** A progressão para 1D depende da consolidação, validação e publicação de 1C. Desenvolvimento e homologação usam exclusivamente dados sintéticos. As etapas posteriores devem manter explícitos os bloqueios até sua resolução comprovada. A implementação de 1D requer execução posterior.

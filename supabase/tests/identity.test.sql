@@ -1,0 +1,10 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
+select plan(4);
+select has_table('public', 'profiles', 'profile table exists');
+select has_table('public', 'identity_acceptances', 'separate versioned legal events');
+select ok(not has_table_privilege('anon','public.profiles','select'), 'anonymous cannot read profiles');
+select ok(not has_table_privilege('authenticated','public.identity_acceptances','insert'), 'direct client cannot forge acceptance');
+select * from finish();
+rollback;
